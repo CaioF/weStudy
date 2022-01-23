@@ -1,5 +1,13 @@
+import { ChakraProvider } from '@chakra-ui/react';
+import { theme } from './theme';
+import { Home } from './pages/Home';
+
 function App() {
-  return <h1>weStudy</h1>;
+  return (
+    <ChakraProvider theme={theme}>
+      <Home />
+    </ChakraProvider>
+  );
 }
 
 export default App;

@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Client",
+            "program": "${workspaceRoot}/web/public/index.html",
+            "cwd": "${workspaceRoot}"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Server",
+            "program": "${workspaceRoot}/api/server.js",
+            "cwd": "${workspaceRoot}"
+        }        
+    ],
+    "compounds": [
+        {
+            "name": "Server/Client",
+            "configurations": ["Server"]
+        }
+    ]
+}

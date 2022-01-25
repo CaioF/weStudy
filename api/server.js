@@ -11,7 +11,12 @@ const client = new OAuth2Client(clientId)
 app.use(cors())
 app.use(bodyParser.json());
 
+app.use("/api/users", require("./routers/users"));
 //TODO: move to seperate module
+
+app.get('/', async (req, res) => { 
+  res.send("hello");
+});
 
 app.post('/api/auth', async (req, res) => { 
 

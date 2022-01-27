@@ -18,6 +18,18 @@ export const routes: Record<string, Route> = {
     path: '/sign-in',
     component: <>SignIn page</>,
   },
+  dashboard: {
+    path: '/dashboard',
+    component: <>Dashboard page</>,
+  },
+  myAccount: {
+    path: '/my-account',
+    component: <>MyAccount page</>,
+  },
+  signOut: {
+    path: '/sign-out',
+    component: <>SignOut page</>,
+  },
 };
 
 export function Routes() {

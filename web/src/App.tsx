@@ -6,7 +6,7 @@ import { Header } from './components/Header';
 function App() {
   return (
     <ChakraProvider theme={theme}>
-      <Header />
+      <Header isAuthenticated={false} />
       <Routes />
     </ChakraProvider>
   );

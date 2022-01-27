@@ -3,7 +3,13 @@ import googleLogo from '../../assets/google-logo.png';
 
 const SocialButton = (props: ButtonProps) => {
   return (
-    <Button color="blue.300" {...props}>
+    <Button
+      bgColor="white"
+      color="blue.300"
+      paddingX="25px"
+      filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
+      {...props}
+    >
       <img src={googleLogo} alt="Google logo" style={{ width: '20px' }} />
       <Text ml="8px" fontWeight={500}>
         Google

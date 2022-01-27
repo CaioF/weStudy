@@ -2,7 +2,7 @@
 
 # weStudy
 
-weStudy is a solution which allows students to find and match with peers based on their search criteria. Students can set his/her preferences when looking for a potential study partner which will present them with a list of potential sturdy groups created by other students. 
+weStudy is a solution which allows students to find and match with peers based on their search criteria. Students can set their preferences when looking for a potential study partner which will present them with a list of potential study groups created by other students. 
 
 ## Functions
 

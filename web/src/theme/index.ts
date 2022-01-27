@@ -2,10 +2,17 @@ import { extendTheme } from '@chakra-ui/react';
 
 const styles = {
   global: {
+    ':root': {
+      '--maxWidth': '1200px',
+    },
     'html, body': {
       fontFamily: 'Roboto, sans-serif',
       fontWeight: 400,
       fontSize: '16px',
+      color: '#07062E',
+    },
+    li: {
+      listStyleType: 'none',
     },
   },
 };

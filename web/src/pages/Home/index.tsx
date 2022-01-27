@@ -1,6 +1,8 @@
 import { Box, Flex, Text, Heading } from '@chakra-ui/react';
 import { Button } from '../../components/Button';
 import img from '../../assets/planet-system.png';
+import { Link } from 'react-router-dom';
+import { routes } from '../../routes';
 
 export function Home() {
   return (
@@ -43,13 +45,15 @@ export function Home() {
           typeface without relying on meaningful content
         </Text>
 
-        <Button
-          buttonType="ghost"
-          alignSelf={{ base: 'center', md: 'flex-end' }}
-          width={{ base: '100%', md: 'fit-content' }}
-        >
-          Sign In
-        </Button>
+        <Link to={routes.signIn.path}>
+          <Button
+            buttonType="ghost"
+            alignSelf={{ base: 'center', md: 'flex-end' }}
+            width={{ base: '100%', md: 'fit-content' }}
+          >
+            Sign In
+          </Button>
+        </Link>
       </Flex>
     </Flex>
   );

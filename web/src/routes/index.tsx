@@ -3,7 +3,7 @@ import {
   Route as ReactDOMRoute,
 } from 'react-router-dom';
 import { Home } from '../pages/Home';
-
+import { SignIn } from '../pages/SignIn';
 interface Route {
   path: string;
   component: JSX.Element;
@@ -16,7 +16,7 @@ export const routes: Record<string, Route> = {
   },
   signIn: {
     path: '/sign-in',
-    component: <>SignIn page</>,
+    component: <SignIn />,
   },
   dashboard: {
     path: '/dashboard',

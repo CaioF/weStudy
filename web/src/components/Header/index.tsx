@@ -52,7 +52,7 @@ export const Header = ({ isAuthenticated }: Props) => {
   const links = isAuthenticated ? authenticatedMenuLinks : menuLinks;
 
   return (
-    <Box as="header" width="100vw" bgColor="blue.900" zIndex={1}>
+    <Box as="header" width="100vw" bgColor="blue.900">
       <Flex
         justify="space-between"
         align="center"
@@ -60,7 +60,10 @@ export const Header = ({ isAuthenticated }: Props) => {
         maxWidth="var(--maxWidth)"
         paddingX="16px"
         color="white"
-        height={{ base: '50px', md: '200px' }}
+        height={{
+          base: 'var(--headerHeightMobile)',
+          md: 'var(--headerHeight)',
+        }}
       >
         <Box>
           <Link to={routes.home.path}>
@@ -86,6 +89,7 @@ export const Header = ({ isAuthenticated }: Props) => {
           width={{ base: isOpen ? '100vw' : '0', md: 'auto' }}
           height={{ base: 'calc(100vh - 49px)', md: 'auto' }}
           transition="0.3s ease-in-out"
+          zIndex={999}
         >
           <Flex
             as="nav"

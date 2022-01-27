@@ -4,12 +4,19 @@ const styles = {
   global: {
     ':root': {
       '--maxWidth': '1200px',
+      '--headerHeight': '200px',
+      '--headerHeightMobile': '50px',
     },
     'html, body': {
       fontFamily: 'Roboto, sans-serif',
       fontWeight: 400,
       fontSize: '16px',
       color: '#07062E',
+      margin: 0,
+      padding: 0,
+    },
+    body: {
+      height: '100%',
     },
     li: {
       listStyleType: 'none',

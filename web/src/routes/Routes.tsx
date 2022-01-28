@@ -17,7 +17,6 @@ const PrivateRoute: FunctionComponent<PrivateRouteProps> = ({
   component,
 }) => {
   const { user } = useAuth();
-  console.log(!!user);
 
   return isPrivate === !!user ? (
     component

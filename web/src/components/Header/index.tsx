@@ -10,6 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { routes } from '../../routes';
+import { useAuth } from '../../hooks';
 interface MenuLink {
   to: string;
   text: string;
@@ -35,21 +36,14 @@ const authenticatedMenuLinks: MenuLink[] = [
     to: routes.myAccount.path,
     text: 'My Account',
   },
-  {
-    to: routes.signOut.path,
-    text: 'Sign Out',
-  },
 ];
 
-interface Props {
-  isAuthenticated: boolean;
-}
-
-export const Header = ({ isAuthenticated }: Props) => {
+export const Header = () => {
   const { pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
-  const links = isAuthenticated ? authenticatedMenuLinks : menuLinks;
+  const links = user ? authenticatedMenuLinks : menuLinks;
 
   return (
     <Box as="header" width="100vw" bgColor="blue.900">
@@ -66,7 +60,7 @@ export const Header = ({ isAuthenticated }: Props) => {
         }}
       >
         <Box>
-          <Link to={routes.home.path}>
+          <Link to={user ? routes.dashboard.path : routes.home.path}>
             <Text fontWeight={500} fontSize={{ base: '20px', md: '40px' }}>
               weStudy
             </Text>
@@ -122,6 +116,24 @@ export const Header = ({ isAuthenticated }: Props) => {
                 </ListItem>
               );
             })}
+            {user && (
+              <ListItem
+                marginLeft={{ base: 0, md: '30px' }}
+                padding={{ base: '20px' }}
+                width="fit-content"
+              >
+                <Text
+                  onClick={signOut}
+                  fontSize="22px"
+                  color="white"
+                  borderBottom="0"
+                  textAlign="center"
+                  cursor="pointer"
+                >
+                  Sign Out
+                </Text>
+              </ListItem>
+            )}
           </Flex>
         </UnorderedList>
       </Flex>

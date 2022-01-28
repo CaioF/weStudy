@@ -1,5 +1,6 @@
 import { Button, ButtonProps, Flex, Stack, Text } from '@chakra-ui/react';
 import googleLogo from '../../assets/google-logo.png';
+import { useAuth } from '../../hooks';
 
 const SocialButton = (props: ButtonProps) => {
   return (
@@ -19,6 +20,8 @@ const SocialButton = (props: ButtonProps) => {
 };
 
 export function SignIn() {
+  const { signIn } = useAuth();
+
   return (
     <Flex
       as="main"
@@ -44,7 +47,7 @@ export function SignIn() {
         spacing="16px"
       >
         <Text>Sign In with</Text>
-        <SocialButton />
+        <SocialButton onClick={signIn} />
         <Text>Or sign up with</Text>
         <SocialButton />
       </Stack>

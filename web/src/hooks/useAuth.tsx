@@ -39,7 +39,7 @@ const AuthProvider: React.FC = ({ children }) => {
     const token = 'fake_token';
 
     localStorage.setItem('@weStudy:token', token);
-    localStorage.setItem('@weStudy:token', JSON.stringify(user));
+    localStorage.setItem('@weStudy:user', JSON.stringify(user));
 
     //TODO: add token to header
 

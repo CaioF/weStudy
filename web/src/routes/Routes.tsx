@@ -36,11 +36,7 @@ export function Routes() {
             key={key}
             path={path}
             element={
-              isPrivate ? (
-                <PrivateRoute isPrivate={isPrivate} component={component} />
-              ) : (
-                component
-              )
+              <PrivateRoute isPrivate={!!isPrivate} component={component} />
             }
           />
         );

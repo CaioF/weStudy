@@ -8,7 +8,7 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <AuthProvider>
-        <Header isAuthenticated={true} />
+        <Header isAuthenticated={false} />
         <Routes />
       </AuthProvider>
     </ChakraProvider>

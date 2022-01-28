@@ -1,4 +1,5 @@
 import { ChakraProvider } from '@chakra-ui/react';
+import { AuthProvider } from './hooks/useAuth';
 import { theme } from './theme';
 import { Routes } from './routes';
 import { Header } from './components/Header';
@@ -6,8 +7,10 @@ import { Header } from './components/Header';
 function App() {
   return (
     <ChakraProvider theme={theme}>
-      <Header isAuthenticated={false} />
-      <Routes />
+      <AuthProvider>
+        <Header isAuthenticated={true} />
+        <Routes />
+      </AuthProvider>
     </ChakraProvider>
   );
 }

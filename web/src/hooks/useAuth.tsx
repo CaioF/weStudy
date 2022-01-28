@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useState, useContext } from 'react';
+import { api } from '../services';
 
 interface User {
   id: string;
@@ -23,7 +24,7 @@ const AuthProvider: React.FC = ({ children }) => {
     const user = localStorage.getItem('@weStudy:user');
 
     if (token && user) {
-      //TODO: add token to header
+      api.defaults.headers.common.authorization = token;
       return { token, user: JSON.parse(user) };
     }
 
@@ -41,7 +42,7 @@ const AuthProvider: React.FC = ({ children }) => {
     localStorage.setItem('@weStudy:token', token);
     localStorage.setItem('@weStudy:user', JSON.stringify(user));
 
-    //TODO: add token to header
+    api.defaults.headers.common.authorization = token;
 
     setData({ token, user });
   }, []);

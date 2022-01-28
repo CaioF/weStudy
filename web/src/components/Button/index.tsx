@@ -19,8 +19,21 @@ const styles = {
   },
 };
 
-export const Button = (props: Props) => (
-  <ChakraButton {...styles[props.buttonType]} {...props}>
-    {props.children}
-  </ChakraButton>
-);
+export const Button = (props: Props) => {
+  const buttonStyles = styles[props.buttonType];
+
+  const chakraProps = Object.keys(props)
+    .filter(key => key !== 'buttonType')
+    .reduce((obj, key) => {
+      return {
+        ...obj,
+        [key]: props[key as keyof Props],
+      };
+    }, {});
+
+  return (
+    <ChakraButton {...buttonStyles} {...chakraProps}>
+      {props.children}
+    </ChakraButton>
+  );
+};

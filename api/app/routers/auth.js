@@ -4,11 +4,8 @@ const router = express.Router();
 const { OAuth2Client } = require('google-auth-library')
 
 // initialize variables
-const clientId = "3959710917-u5fgrd58uoi3e7m12i5e1i9cnuotsalu.apps.googleusercontent.com";
+const clientId = process.env.googleClientId;
 const client = new OAuth2Client(clientId)
-
-// Setup GET methods
-/*************** GET ***************/
 
 // Setup POST methods
 /*************** POST ***************/

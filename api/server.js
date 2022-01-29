@@ -2,14 +2,17 @@
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const dotenv = require('dotenv');
 
 // initialize variables
+dotenv.config();
 const app = express()
-const port = 3001
+var port = process.env.serverPort;
 
 // initialize app (our server)
 app.use(cors())
 app.use(bodyParser.json());
+
 
 // configure routes, bscially ulr paths that when called externally, 
 // will delegate control to the specified script in the routers folder

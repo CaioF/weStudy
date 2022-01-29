@@ -1,8 +1,7 @@
-var config = require("../config");
-
 var conPool = null;
 
 function initConnection(){
+    return;
 }
 
 /**

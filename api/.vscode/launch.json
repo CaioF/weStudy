@@ -4,15 +4,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Client",
-            "program": "${workspaceRoot}/web/public/index.html",
-            "cwd": "${workspaceRoot}"
-        },
-        {
-            "type": "node",
-            "request": "launch",
             "name": "Server",
-            "program": "${workspaceRoot}/api/server.js",
+            "program": "${workspaceRoot}/server.js",
             "cwd": "${workspaceRoot}"
         }        
     ],

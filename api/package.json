@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Codendaal1120/Uol-Agile-cm2020#readme",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^14.3.2",
     "express": "^4.17.2",
     "google-auth-library": "^7.11.0"
   }

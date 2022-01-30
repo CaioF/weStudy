@@ -6,16 +6,15 @@ const router = express.Router();
 // Setup GET methods
 /*************** GET ***************/
 
-router.get("/userDetails", function (req, res) {
+router.get("/userDetails", async function (req, res) {
 
-    dataService.tryGetUserById(req.session.userId, function(result){
-        if (result.success){
-            res.send(result.payload);
-        }
-        else{
-            res.status(500).send(result.error);
-        }
-    }); 
+    const result = await dataService.tryGetUserById(req.session.userId); 
+    if (result.success){
+        res.send(result.payload);
+    }
+    else{
+        res.status(500).send(result.error);
+    }
     
 });
 

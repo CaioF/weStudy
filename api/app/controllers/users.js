@@ -1,10 +1,17 @@
 var express = require("express");
-var dataService = require("../data/userDataService");
+var dataService = require("../services/userDataService");
 
 const router = express.Router();
 
 // Setup GET methods
 /*************** GET ***************/
+
+router.get("/userDetails", function (req, res) {
+
+    res.status(500).send(result.error);
+    
+});
+
 /** Get user by email address */
 router.get("/:userEmail", function (req, res) {
 

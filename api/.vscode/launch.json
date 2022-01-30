@@ -6,7 +6,8 @@
             "request": "launch",
             "name": "Server",
             "program": "${workspaceRoot}/server.js",
-            "cwd": "${workspaceRoot}"
+            "cwd": "${workspaceRoot}",
+            "console": "integratedTerminal"
         }        
     ],
     "compounds": [

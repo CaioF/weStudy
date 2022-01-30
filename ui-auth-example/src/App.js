@@ -3,6 +3,7 @@ import './App.css';
 import GoogleLogin from 'react-google-login';
 
 function App() {
+  
   return (
     <div className="App">
       <header className="App-header">
@@ -20,7 +21,7 @@ function App() {
         </a>
 
         <GoogleLogin
-            clientId={"3959710917-u5fgrd58uoi3e7m12i5e1i9cnuotsalu.apps.googleusercontent.com"} //this is our google app client id for weStudy
+            clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
             buttonText="Log in with Google"
             onSuccess={handleLogin}
             onFailure={handleLogin}

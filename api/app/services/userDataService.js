@@ -1,12 +1,12 @@
-var dataService = require("./data");
+var dataService = require("./dataService");
 
 // for now we will just mock the data
 
-var getUserByEmail = function(email, callack) {
+var tryGetUserByEmail = async function(email) {
     
     // validate input
     if (!email){
-        return callack({ success : false, error : "Invalid email address" });
+        return { success : false, error : "Invalid email address" };
     }
 
     // we need to lookup this user from the DB
@@ -19,8 +19,7 @@ var getUserByEmail = function(email, callack) {
     };
 
     // return the user 
-    callack({ success : true, payload : user });
+    return { success : true, payload : user };
 };
 
-
-module.exports.getUserByEmail = getUserByEmail;
+module.exports.tryGetUserByEmail = tryGetUserByEmail;

@@ -8,14 +8,7 @@ const router = express.Router();
 
 router.get("/userDetails", function (req, res) {
 
-    res.status(500).send(result.error);
-    
-});
-
-/** Get user by email address */
-router.get("/:userEmail", function (req, res) {
-
-    dataService.getUserByEmail(req.params.userEmail, function(result){
+    dataService.tryGetUserById(req.session.userId, function(result){
         if (result.success){
             res.send(result.payload);
         }
@@ -25,6 +18,5 @@ router.get("/:userEmail", function (req, res) {
     }); 
     
 });
-
 
 module.exports = router;

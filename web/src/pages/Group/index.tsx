@@ -1,5 +1,6 @@
 // import { useParams } from 'react-router-dom';
 import { Grid, GridItem } from '@chakra-ui/react';
+import { Participants } from '../../components/Participants';
 
 export function Group() {
   // const { groupId } = useParams();
@@ -39,11 +40,11 @@ export function Group() {
         buttons
       </GridItem>
 
-      <GridItem area="participants" bg="papayawhip">
-        participants
+      <GridItem area="participants">
+        <Participants />
       </GridItem>
 
-      <GridItem area="chat" bg="blue">
+      <GridItem area="chat" bg="blue.900">
         chat
       </GridItem>
 

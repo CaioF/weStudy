@@ -1,5 +1,6 @@
 import { Home } from '../pages/Home';
 import { SignIn } from '../pages/SignIn';
+import { Group } from '../pages/Group';
 
 interface AppRoute {
   path: string;
@@ -30,5 +31,14 @@ export const routes: Record<string, AppRoute> = {
     path: '/sign-out',
     component: <>SignOut Page</>,
     isPrivate: true,
+  },
+  group: {
+    path: '/group/:groupId',
+    component: <Group />,
+    isPrivate: true,
+  },
+  noMatch: {
+    path: '*',
+    component: <>No Match!</>,
   },
 };

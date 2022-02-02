@@ -1,8 +1,9 @@
 import React, { createContext, useCallback, useState, useContext } from 'react';
 import { api } from '../services';
 
-interface User {
+export interface User {
   id: string;
+  name: string;
 }
 
 interface AuthState {
@@ -36,6 +37,7 @@ const AuthProvider: React.FC = ({ children }) => {
     //TODO: make login api call
     const user = {
       id: 'fake_user_id',
+      name: 'Joe',
     };
     const token = 'fake_token';
 

@@ -1,8 +1,14 @@
 import { Flex } from '@chakra-ui/react';
 
-export function Circle({ num }: { num: number }) {
+interface Props {
+  num: number;
+  withBorder?: boolean;
+}
+
+export function Circle({ num, withBorder = false }: Props) {
   return (
     <Flex
+      border={withBorder ? '1px solid' : 'unset'}
       bgColor="white"
       fontSize="12px"
       width="20px"

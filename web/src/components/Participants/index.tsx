@@ -1,4 +1,4 @@
-import { Flex, Stack, Text } from '@chakra-ui/react';
+import { Box, Flex, Stack, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { Button } from '../Button';
 import { Circle } from '../Circle';
@@ -71,7 +71,7 @@ function Participant({ name, rate }: ParticipantProps) {
           marginLeft="16px"
           buttonType="regular"
           fontSize="12px"
-          bgColor="red"
+          bgColor="red.500"
           height="24px"
           paddingX="16px"
           onClick={() => console.log('Remove')}
@@ -87,8 +87,7 @@ export function Participants() {
   return (
     <Flex
       width="100%"
-      height="100%"
-      minHeight="300px"
+      height="250px"
       bgColor="white"
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"

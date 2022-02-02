@@ -183,7 +183,7 @@ export function Tasks() {
         </Flex>
       </Flex>
 
-      <Tabs variant="enclosed" mt="8px">
+      <Tabs variant="enclosed" mt="8px" overflowY="scroll">
         <TabList>
           <Tab>
             <Text mr="8px">Pending</Text>

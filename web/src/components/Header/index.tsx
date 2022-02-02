@@ -11,6 +11,8 @@ import {
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { routes } from '../../routes';
 import { useAuth } from '../../hooks';
+import { useModal } from '../../hooks/useModal';
+import { MyAccount } from '../MyAccount';
 interface MenuLink {
   to: string;
   text: string;
@@ -32,16 +34,13 @@ const authenticatedMenuLinks: MenuLink[] = [
     to: routes.dashboard.path,
     text: 'Dashboard',
   },
-  {
-    to: routes.myAccount.path,
-    text: 'My Account',
-  },
 ];
 
 export const Header = () => {
   const { pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { openModal } = useModal();
 
   const links = user ? authenticatedMenuLinks : menuLinks;
 
@@ -117,22 +116,41 @@ export const Header = () => {
               );
             })}
             {user && (
-              <ListItem
-                marginLeft={{ base: 0, md: '30px' }}
-                padding={{ base: '20px' }}
-                width="fit-content"
-              >
-                <Text
-                  onClick={signOut}
-                  fontSize="22px"
-                  color="white"
-                  borderBottom="0"
-                  textAlign="center"
-                  cursor="pointer"
+              <>
+                <ListItem
+                  marginLeft={{ base: 0, md: '30px' }}
+                  padding={{ base: '20px' }}
+                  width="fit-content"
                 >
-                  Sign Out
-                </Text>
-              </ListItem>
+                  <Text
+                    onClick={() => openModal(<MyAccount />)}
+                    fontSize="22px"
+                    color="white"
+                    borderBottom="0"
+                    textAlign="center"
+                    cursor="pointer"
+                  >
+                    My Account
+                  </Text>
+                </ListItem>
+
+                <ListItem
+                  marginLeft={{ base: 0, md: '30px' }}
+                  padding={{ base: '20px' }}
+                  width="fit-content"
+                >
+                  <Text
+                    onClick={signOut}
+                    fontSize="22px"
+                    color="white"
+                    borderBottom="0"
+                    textAlign="center"
+                    cursor="pointer"
+                  >
+                    Sign Out
+                  </Text>
+                </ListItem>
+              </>
             )}
           </Flex>
         </UnorderedList>

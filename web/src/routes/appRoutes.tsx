@@ -22,11 +22,6 @@ export const routes: Record<string, AppRoute> = {
     component: <>Dashboard Page</>,
     isPrivate: true,
   },
-  myAccount: {
-    path: '/my-account',
-    component: <>MyAccount Page</>,
-    isPrivate: true,
-  },
   signOut: {
     path: '/sign-out',
     component: <>SignOut Page</>,

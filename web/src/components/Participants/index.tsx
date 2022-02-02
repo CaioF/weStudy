@@ -108,7 +108,7 @@ export function Participants() {
           Participants
         </Text>
 
-        <Circle text="9" />
+        <Circle num={9} />
       </Flex>
 
       <Stack paddingX="16px" paddingY="8px" spacing="8px" overflowY="scroll">

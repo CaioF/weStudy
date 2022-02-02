@@ -1,6 +1,6 @@
 import { Flex } from '@chakra-ui/react';
 
-export function Circle({ text }: { text: string }) {
+export function Circle({ num }: { num: number }) {
   return (
     <Flex
       bgColor="white"
@@ -13,7 +13,7 @@ export function Circle({ text }: { text: string }) {
       alignItems="center"
       color="blue.700"
     >
-      {text}
+      {num}
     </Flex>
   );
 }

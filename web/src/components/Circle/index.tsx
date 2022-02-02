@@ -6,6 +6,7 @@ export function Circle({ num }: { num: number }) {
       bgColor="white"
       fontSize="12px"
       width="20px"
+      minWidth="20px"
       height="20px"
       borderRadius="50%"
       textAlign="center"

@@ -1,7 +1,7 @@
 import { Button as ChakraButton, ButtonProps } from '@chakra-ui/react';
 
 interface Props extends ButtonProps {
-  buttonType: 'regular' | 'ghost';
+  buttonType?: 'regular' | 'ghost';
 }
 
 const styles = {
@@ -20,7 +20,7 @@ const styles = {
 };
 
 export const Button = (props: Props) => {
-  const buttonStyles = styles[props.buttonType];
+  const buttonStyles = styles[props.buttonType ? props.buttonType : 'regular'];
 
   const chakraProps = Object.keys(props)
     .filter(key => key !== 'buttonType')

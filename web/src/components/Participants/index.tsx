@@ -88,7 +88,7 @@ export function Participants() {
     <Flex
       width="100%"
       height="100%"
-      maxHeight="300px"
+      minHeight="300px"
       bgColor="white"
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"

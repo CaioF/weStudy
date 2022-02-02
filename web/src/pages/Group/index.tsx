@@ -20,8 +20,8 @@ export function Group() {
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
       templateRows={{
-        base: 'repeat(4, 1fr)',
-        md: '0.1fr 0.4fr 0.5fr',
+        base: 'fit-content fit-content fit-content',
+        md: 'fit-content fit-content fit-content',
       }}
       templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
       templateAreas={{
@@ -39,12 +39,20 @@ export function Group() {
       }}
     >
       <GridItem area="buttons">
-        <Stack direction="row" justify="stretch" spacing="16px">
-          <Button flex={1}>Edit group</Button>
+        <Stack
+          direction={{ base: 'column', md: 'row' }}
+          justify={{ base: 'center', md: 'stretch' }}
+          spacing="16px"
+        >
+          <Button flexGrow={1} flexShrink={0}>
+            Edit group
+          </Button>
 
-          <Button flex={1}>Invite to group</Button>
+          <Button flexGrow={1} flexShrink={0}>
+            Invite to group
+          </Button>
 
-          <Button flex={1} flexShrink={0}>
+          <Button flexGrow={1} flexShrink={0}>
             <Text marginRight="8px">Join requests</Text>
             <Circle num={2} />
           </Button>

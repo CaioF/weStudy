@@ -1,9 +1,10 @@
 // import { useParams } from 'react-router-dom';
-import { Text, GridItem, Stack, Box, Flex } from '@chakra-ui/react';
+import { Text, Stack, Box, Flex } from '@chakra-ui/react';
 import { Participants } from '../../components/Participants';
 import { Button } from '../../components/Button';
 import { Circle } from '../../components/Circle';
 import { Tasks } from '../../components/Tasks';
+import { Chat } from '../../components/Chat';
 
 export function Group() {
   // const { groupId } = useParams();
@@ -47,13 +48,9 @@ export function Group() {
           </Button>
         </Stack>
 
-        <Box>
-          <Participants />
-        </Box>
+        <Participants />
 
-        <Box bgColor="blue.300" h="100%">
-          chat
-        </Box>
+        <Chat />
       </Stack>
 
       <Box width={{ base: '100%', md: '"50%"' }}>

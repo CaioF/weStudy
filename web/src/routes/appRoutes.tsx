@@ -1,6 +1,7 @@
 import { Home } from '../pages/Home';
 import { SignIn } from '../pages/SignIn';
 import { Group } from '../pages/Group';
+import { Dashboard } from '../pages/Dashboard';
 
 interface AppRoute {
   path: string;
@@ -19,7 +20,7 @@ export const routes: Record<string, AppRoute> = {
   },
   dashboard: {
     path: '/dashboard',
-    component: <>Dashboard Page</>,
+    component: <Dashboard />,
     isPrivate: true,
   },
   signOut: {

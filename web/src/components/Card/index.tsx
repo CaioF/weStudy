@@ -1,6 +1,12 @@
-import { Flex, Text, Button, Stack } from "@chakra-ui/react";
+import { Flex, Text, Button, Stack } from '@chakra-ui/react';
 
-function Card(props: { title: any; summary: any; date: any; tasks: any; participants: any; }) {
+function Card(props: {
+  title: any;
+  summary: any;
+  date: any;
+  tasks: any;
+  participants: any;
+}) {
   const { title, summary, date, tasks, participants } = props;
 
   return (

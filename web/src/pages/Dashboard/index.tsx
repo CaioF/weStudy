@@ -41,6 +41,7 @@ export function Dashboard() {
       bgColor="gray.300"
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
+      justifyContent="center"
     >
       <SimpleGrid columns={3}>
         {dataList.map(function (data) {

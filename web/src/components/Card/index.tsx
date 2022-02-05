@@ -26,7 +26,7 @@ function Card(props: {
         justify="space-between"
         mt={{ base: 4, md: 0 }}
       >
-        <Flex bgColor="green.300" width="100%">
+        <Flex bgColor="green.300" width="100%" justifyContent="center">
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -71,7 +71,7 @@ function Card(props: {
                 {participants}
               </Text>
             </Flex>
-            <Button display="block" width="10rem" my={2}>
+            <Button alignSelf="center" display="block" width="10rem" my={2}>
               Open group
             </Button>
           </Stack>

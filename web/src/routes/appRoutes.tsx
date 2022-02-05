@@ -23,11 +23,6 @@ export const routes: Record<string, AppRoute> = {
     component: <Dashboard />,
     isPrivate: true,
   },
-  signOut: {
-    path: '/sign-out',
-    component: <>SignOut Page</>,
-    isPrivate: true,
-  },
   group: {
     path: '/group/:groupId',
     component: <Group />,

@@ -1,4 +1,4 @@
-import { Box, Flex, Stack, Text } from '@chakra-ui/react';
+import { Flex, Stack, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { Button } from '../Button';
 import { Circle } from '../Circle';

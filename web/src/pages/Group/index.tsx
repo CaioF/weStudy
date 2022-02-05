@@ -5,9 +5,13 @@ import { Button } from '../../components/Button';
 import { Circle } from '../../components/Circle';
 import { Tasks } from '../../components/Tasks';
 import { Chat } from '../../components/Chat';
+import { useModal } from '../../hooks';
+import { GroupForm } from '../../components/GroupForm';
+import { JoinRequests } from '../../components/JoinRequests';
+import { InvitationLink } from '../../components/InvitationLink';
 
 export function Group() {
-  // const { groupId } = useParams();
+  const { openModal } = useModal();
 
   return (
     <Flex
@@ -34,15 +38,27 @@ export function Group() {
           justify={{ base: 'center', lg: 'stretch' }}
           spacing="16px"
         >
-          <Button flexGrow={1} flexShrink={0}>
+          <Button
+            flexGrow={1}
+            flexShrink={0}
+            onClick={() => openModal(<GroupForm action="edit" />)}
+          >
             Edit group
           </Button>
 
-          <Button flexGrow={1} flexShrink={0}>
+          <Button
+            flexGrow={1}
+            flexShrink={0}
+            onClick={() => openModal(<InvitationLink />)}
+          >
             Invite to group
           </Button>
 
-          <Button flexGrow={1} flexShrink={0}>
+          <Button
+            flexGrow={1}
+            flexShrink={0}
+            onClick={() => openModal(<JoinRequests />)}
+          >
             <Text marginRight="8px">Join requests</Text>
             <Circle num={2} />
           </Button>

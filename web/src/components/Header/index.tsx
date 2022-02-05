@@ -10,8 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { routes } from '../../routes';
-import { useAuth } from '../../hooks';
-import { useModal } from '../../hooks/useModal';
+import { useAuth, useModal } from '../../hooks';
 import { MyAccount } from '../MyAccount';
 interface MenuLink {
   to: string;

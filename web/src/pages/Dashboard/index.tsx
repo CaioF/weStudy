@@ -1,4 +1,4 @@
-import { ChakraProvider, SimpleGrid, Container } from '@chakra-ui/react';
+import { SimpleGrid, Flex } from '@chakra-ui/react';
 import Card from '../../components/Card';
 
 export function Dashboard() {
@@ -31,24 +31,32 @@ export function Dashboard() {
   ];
 
   return (
-    <ChakraProvider>
-      <Container maxW="80rem" centerContent>
-        <SimpleGrid columns={3}>
-          {dataList.map(function (data) {
-            const { id, title, summary, date, tasks, participants } = data;
-            return (
-              <Card
-                key={id}
-                title={title}
-                summary={summary}
-                date={date}
-                tasks={tasks}
-                participants={participants}
-              />
-            );
-          })}
-        </SimpleGrid>
-      </Container>
-    </ChakraProvider>
+    <Flex
+      height={{ base: 'auto', md: '80vh' }}
+      marginTop={{ base: '0', md: '-40px' }}
+      width="100%"
+      maxWidth="var(--maxWidth)"
+      marginX="auto"
+      padding="16px"
+      bgColor="gray.300"
+      filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
+      borderRadius="10px"
+    >
+      <SimpleGrid columns={3}>
+        {dataList.map(function (data) {
+          const { id, title, summary, date, tasks, participants } = data;
+          return (
+            <Card
+              key={id}
+              title={title}
+              summary={summary}
+              date={date}
+              tasks={tasks}
+              participants={participants}
+            />
+          );
+        })}
+      </SimpleGrid>
+    </Flex>
   );
 }

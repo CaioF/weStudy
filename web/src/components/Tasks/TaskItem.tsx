@@ -134,7 +134,7 @@ export function TaskItem({
 
         <Button
           buttonType="regular"
-          width="100px"
+          width={{ base: 'fit-content', md: '100px' }}
           fontSize="12px"
           bgColor="blue.300"
           height="24px"

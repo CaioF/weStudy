@@ -28,6 +28,14 @@ function App() {
             cookiePolicy={'single_host_origin'}
         />
 
+      <GoogleLogin
+            clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+            buttonText="Sing up with Google"
+            onSuccess={handleSignup}
+            onFailure={handleSignup}
+            cookiePolicy={'single_host_origin'}
+        />
+
       </header>
     </div>
   );
@@ -35,7 +43,19 @@ function App() {
 
 // post auth data to server
 const handleLogin = async googleData => {
-  const res = await fetch("http://localhost:3001/api/auth", {
+  const res = await fetch("http://localhost:3001/secure/auth", {
+      method: "POST",
+      body: JSON.stringify({ token: googleData.tokenId }),
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  const data = await res.json()
+  // store returned user somehow
+}
+
+const handleSignup = async googleData => {
+  const res = await fetch("http://localhost:3001/secure/signup", {
       method: "POST",
       body: JSON.stringify({ token: googleData.tokenId }),
     headers: {

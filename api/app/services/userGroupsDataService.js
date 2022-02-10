@@ -4,7 +4,7 @@ const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
 const utility = require("../utility");
 
-// for now we will just mock the data
+// TODO:Times to be converted to UTC before saving
 
 var tryGetUserGroups = async function(userId) {
     
@@ -13,7 +13,8 @@ var tryGetUserGroups = async function(userId) {
         return { success : false, error : "Invalid userId" };
     }
 
-    let groups = await dataService.getManyAsync(collectionName, { "userId" : userId});
+    //TODO:CO::Update query to include groups I have joined (contained in members)
+    let groups = await dataService.getManyAsync(collectionName, { "userId" : userId } );
 
     // return the user 
     return { success : true, payload : groups.payload };
@@ -32,6 +33,7 @@ var createNewGroup = async function(userId, group) {
             userId: userId, 
             name: group.name, 
             size : group.size,
+            spots : group.size,
             timeZone : group.timeZone,
             timeRanges : group.timeRanges,
             dateCreated: new Date(),
@@ -61,9 +63,11 @@ var tryUpdateGroup = async function(userId, groupId, group) {
          $set : { 
              userId: userId, 
              name: group.name, 
+             subject: group.subject, 
              size : group.size,
              timeZone : group.timeZone,
              timeRanges : group.timeRanges,
+             members : [],
              dateUpdated: new Date() }
      }
      
@@ -81,6 +85,47 @@ var deleteGroup = async function(userId, groupId) {
     return { success : true };
 }
 
+var searchGroup = async function(searchRequest) {
+    
+    // first validate input    
+    let errors = validateSearchRequest(searchRequest);
+    if (errors.length > 0){
+        return { success : false, error : errors };
+    }
+
+    /*
+    db.getCollection('user.groups').find({ timeRanges : { $elemMatch  : {
+        day : "Monday",
+        startTime : { $lte : 1300 },
+        endTime : { $gte : 1400 },
+    }
+    }, spots : { $gte : 1 } })
+
+    db.getCollection('user.groups').find({subject:{'$regex' : 'math', '$options' : 'i'}})
+    */
+
+    let groupSizeRange = Math.max(1, searchRequest.groupSize * 0.15);
+    let groupSizeMax = searchRequest.groupSize + groupSizeRange;
+    let groupSizeMin = Math.max(searchRequest.groupSize - groupSizeRange, 1);
+    
+    let filter = { 
+        "timeRanges" : {  $elemMatch: {
+            "day" : searchRequest.day, 
+            "startTime" : { $lte : searchRequest.startTime },
+            "endTime" : { $gte : searchRequest.endTime },
+        }},
+        "spots" : {  $gte : 1 },
+        'subject': {'$regex':  searchRequest.subject, '$options' : 'i'},
+        "size" : { $lte : groupSizeMax },
+        "size" : { $gte : groupSizeMin },
+        //TODO: Add group size preferred range
+    };
+
+    let groups = await dataService.getManyAsync(collectionName, filter );
+
+    return groups;
+}
+
 function validateGroup(group, userId){
     var errors = [];
     if (!userId){
@@ -93,6 +138,11 @@ function validateGroup(group, userId){
     
     if (!group.name){
         errors.push("Invalid group name");
+    }
+
+    // for now we will allow free form subjects
+    if (!group.subject){
+        errors.push("Invalid subject");
     }
         
     if (!group.size || group.size < 2){
@@ -130,8 +180,33 @@ function validateGroup(group, userId){
     return errors;
 }
 
+function validateSearchRequest(request){
+    var errors = [];
+    if (!request){
+        errors.push("Invalid search request");
+    }
+
+    if (!request.groupSize || !Number.isInteger(request.groupSize)){
+        errors.push("Invalid groupSize");
+    }
+
+    if (!request.startTime|| !Number.isInteger(request.startTime)){
+        errors.push("Invalid startTime");
+    }
+  
+    if (!request.endTime|| !Number.isInteger(request.endTime)){
+        errors.push("Invalid endTime");
+    }
+
+    if (request.startTime > request.endTime){
+        errors.push("Invalid time range, start needs to be less than end");
+    }
+
+    return errors;
+}
 
 module.exports.tryGetUserGroups = tryGetUserGroups;
 module.exports.createNewGroup = createNewGroup;
 module.exports.tryUpdateGroup = tryUpdateGroup;
 module.exports.deleteGroup = deleteGroup;
+module.exports.searchGroup = searchGroup;

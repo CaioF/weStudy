@@ -29,6 +29,19 @@ router.post("/", async function (req, res) {
     }    
 });
 
+/** search for group */
+router.post("/find", async function (req, res) {
+
+    const result = await dataService.searchGroup(req.body); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
+
 /** update group */
 router.put("/:groupId", async function (req, res) {
 
@@ -52,5 +65,6 @@ router.delete("/:groupId", async function (req, res) {
         res.status(400).json(result.error);
     }    
 });
+
 
 module.exports = router;

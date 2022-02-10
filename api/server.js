@@ -54,8 +54,9 @@ app.use('/api', async (req, res, next) => {
 // configure routes, bscially ulr paths that when called externally, 
 // will delegate control to the specified script in the routers folder
 app.use("/api/users", require("./app/controllers/users"));
+app.use("/api/userGroups", require("./app/controllers/userGroups"));
 app.use("/secure", require("./app/controllers/auth"));
-
+app.use("/api/meta", require("./app/controllers/meta"));
 // basic route
 app.get('/', async (req, res) => { 
   res.send("Welcome to weStudy");

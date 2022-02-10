@@ -13,23 +13,48 @@ router.post('/auth', async (req, res) => {
 
     try{      
       const { token }  = req.body
-      const userDetails = await authService.getUserDetailsFromIdToken(token);
+      const gUserDetails = await authService.getUserDetailsFromIdToken(token);
       
        // generate jwt
-       const jwt = await tryGetUserAndCreateJwt(userDetails.email);
+       const jwt = await tryGetUserAndCreateJwt(gUserDetails.email);
      
        if (!jwt.success){
-         res.status(400).send(jwt.error);
+         res.status(400).json(jwt.error);
          return;
        }
  
-       res.send({ token : jwt.payload });
+       res.json({ token : jwt.payload });
     }
     catch (e) {
       console.log(e);
-      res.status(401).send("Invalid auth payload");
+      res.status(401).json("Invalid auth payload");
     }
    
+});
+
+/** This is the signup function, 
+ * Simlar to auth, but instead we will create the user if it does not exists. */
+ router.post('/signUp', async (req, res) => { 
+
+  try{      
+    const { token }  = req.body
+    const gUserDetails = await authService.getUserDetailsFromIdToken(token);
+    
+     // generate jwt
+     const user = await userService.tryGetOrCreateUser(gUserDetails);
+   
+     if (!user.success){
+       res.status(400).json(user.error);
+       return;
+     }
+
+     res.json({ token : user.payload });
+  }
+  catch (e) {
+    console.log(e);
+    res.status(401).json("Invalid auth payload");
+  }
+ 
 });
 
 /** Exchange the google access token for a local JWT token 
@@ -56,11 +81,11 @@ router.post('/token', async (req, res) => {
       const jwt = await tryGetUserAndCreateJwt(userDetails.email);
      
       if (!jwt.success){
-        res.status(400).send(jwt.error);
+        res.status(400).json(jwt.error);
         return;
       }
 
-      res.send({ token : jwt.payload });
+      res.json({ token : jwt.payload });
     });
   }
   catch (e) {

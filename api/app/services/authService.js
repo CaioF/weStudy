@@ -1,6 +1,7 @@
 const { OAuth2Client } = require('google-auth-library');
 const jwt = require("jsonwebtoken");
 const https = require('https');
+const dataService = require("./dataService");
 
 // initialize variables
 const client = new OAuth2Client(process.env.googleClientId)
@@ -38,7 +39,9 @@ function tryGenerateJwt(user){
     return { success : false, error : "Invalid user object" };
   }
 
+  // cretae JWT token, using secret from config
   const token = jwt.sign({ userId : user.id }, process.env.jwtSecret); 
+
   return { success : true, payload : token };
 }
 
@@ -50,7 +53,7 @@ function tryVerifyJwt(token, callback){
   jwt.verify(token, process.env.jwtSecret,  function(err, decoded)
   { 
     if (err){
-      result = { success : false, error : err .message};
+      result = { success : false, error : err.message};
     }
     else{
       result =  { success : true, payload : decoded};
@@ -58,6 +61,16 @@ function tryVerifyJwt(token, callback){
    
     callback(result);
   });  
+}
+
+async function tryCreateUser(userEmail){
+
+  // we will restrict the total number of users to 50, 
+  // just to make sure we do not ramp up hosting costs and since this is a demo only
+  let userCount = await dataService.getCollectionSize("users");
+  if (userCount > 50){
+    return { success : false, error : "ma"};
+  }
 }
 
 module.exports.getUserDetailsFromIdToken = getUserDetailsFromIdToken;

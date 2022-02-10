@@ -4,16 +4,10 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Client",
-            "program": "${workspaceRoot}/web/public/index.html",
-            "cwd": "${workspaceRoot}"
-        },
-        {
-            "type": "node",
-            "request": "launch",
             "name": "Server",
-            "program": "${workspaceRoot}/api/server.js",
-            "cwd": "${workspaceRoot}"
+            "program": "${workspaceRoot}/server.js",
+            "cwd": "${workspaceRoot}",
+            "console": "integratedTerminal"
         }        
     ],
     "compounds": [

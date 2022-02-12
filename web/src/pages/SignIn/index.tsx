@@ -1,26 +1,10 @@
-import { Button, ButtonProps, Flex, Stack, Text } from '@chakra-ui/react';
-import googleLogo from '../../assets/google-logo.png';
+import { Flex, Stack, Text } from '@chakra-ui/react';
+import GoogleLogin from 'react-google-login';
 import { useAuth } from '../../hooks';
 
-const SocialButton = (props: ButtonProps) => {
-  return (
-    <Button
-      bgColor="white"
-      color="blue.300"
-      paddingX="25px"
-      filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
-      {...props}
-    >
-      <img src={googleLogo} alt="Google logo" style={{ width: '20px' }} />
-      <Text ml="8px" fontWeight={500}>
-        Google
-      </Text>
-    </Button>
-  );
-};
-
 export function SignIn() {
-  const { signIn } = useAuth();
+  const { googleClientId, onGoogleSignInSuccess, onGoogleSignUpSuccess } =
+    useAuth();
 
   return (
     <Flex
@@ -47,9 +31,17 @@ export function SignIn() {
         spacing="16px"
       >
         <Text>Sign In with</Text>
-        <SocialButton onClick={signIn} />
+        <GoogleLogin
+          clientId={googleClientId}
+          onSuccess={onGoogleSignInSuccess}
+          buttonText="Google"
+        />
         <Text>Or sign up with</Text>
-        <SocialButton />
+        <GoogleLogin
+          clientId={googleClientId}
+          onSuccess={onGoogleSignUpSuccess}
+          buttonText="Google"
+        />
       </Stack>
     </Flex>
   );

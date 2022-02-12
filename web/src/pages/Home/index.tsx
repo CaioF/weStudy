@@ -51,7 +51,7 @@ export function Home() {
             alignSelf={{ base: 'center', md: 'flex-end' }}
             width={{ base: '100%', md: 'fit-content' }}
           >
-            Sign In
+            Try weStudy
           </Button>
         </Link>
       </Flex>

@@ -1,6 +1,12 @@
 import React, { createContext, useCallback, useState, useContext } from 'react';
+import {
+  GoogleLoginResponse,
+  GoogleLoginResponseOffline,
+} from 'react-google-login';
+
 import { api } from '../services';
 
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID as string;
 export interface User {
   id: string;
   name: string;
@@ -10,11 +16,16 @@ interface AuthState {
   token: string;
   user: User;
 }
-
 interface AuthContextData {
   user: User;
-  signIn(): Promise<void>;
+  googleClientId: string;
   signOut(): void;
+  onGoogleSignInSuccess(
+    res: GoogleLoginResponse | GoogleLoginResponseOffline,
+  ): void;
+  onGoogleSignUpSuccess(
+    res: GoogleLoginResponse | GoogleLoginResponseOffline,
+  ): void;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -32,22 +43,39 @@ const AuthProvider: React.FC = ({ children }) => {
     return {} as AuthState;
   });
 
-  const signIn = useCallback(async () => {
-    console.log('signIn');
-    //TODO: make login api call
-    const user = {
-      id: 'fake_user_id',
-      name: 'Joe',
-    };
-    const token = 'fake_token';
+  function onGoogleSignInSuccess(res: GoogleLoginResponse): void {
+    api
+      .post('/secure/auth', {
+        token: res.tokenId,
+      })
+      .then(response => {
+        const { token, user } = response.data;
+        localStorage.setItem('@weStudy:token', token);
+        localStorage.setItem('@weStudy:user', JSON.stringify(user));
 
-    localStorage.setItem('@weStudy:token', token);
-    localStorage.setItem('@weStudy:user', JSON.stringify(user));
+        api.defaults.headers.common.authorization = token;
 
-    api.defaults.headers.common.authorization = token;
+        setData({ token, user });
+      })
+      .catch(err => console.error(err));
+  }
 
-    setData({ token, user });
-  }, []);
+  function onGoogleSignUpSuccess(res: GoogleLoginResponse): void {
+    api
+      .post('/secure/signUp', {
+        token: res.tokenId,
+      })
+      .then(response => {
+        const { token, user } = response.data;
+        localStorage.setItem('@weStudy:token', token);
+        localStorage.setItem('@weStudy:user', JSON.stringify(user));
+
+        api.defaults.headers.common.authorization = token;
+
+        setData({ token, user });
+      })
+      .catch(err => console.error(err));
+  }
 
   const signOut = useCallback(() => {
     console.log('signOut');
@@ -58,7 +86,15 @@ const AuthProvider: React.FC = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user: data.user, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user: data.user,
+        googleClientId: GOOGLE_CLIENT_ID,
+        onGoogleSignInSuccess,
+        onGoogleSignUpSuccess,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

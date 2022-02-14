@@ -24,7 +24,7 @@ weStudy is a solution which allows students to find and match with peers based o
 
 #### Backend
 - [Christian](https://github.com/Codendaal1120)
-- [Fatemeh]()
+- [Fatemeh](https://github.com/Razgaleh)
 
 ## License
 [GPLv3](LICENSE.md)

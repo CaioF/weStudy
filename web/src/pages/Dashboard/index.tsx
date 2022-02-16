@@ -1,5 +1,8 @@
-import { SimpleGrid, Flex } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
+/* eslint-disable import/no-unresolved */
+import { Swiper, SwiperSlide } from 'swiper/react';
 import Card from '../../components/Card';
+import 'swiper/css';
 
 export function Dashboard() {
   const dataList = [
@@ -28,6 +31,31 @@ export function Dashboard() {
       tasks: '7',
       participants: '7',
     },
+    {
+      id: '4',
+      title: 'Group 4',
+      summary: 'This is a summary, can be any length',
+      date: '12/12/12',
+      tasks: '7',
+      participants: '7',
+    },
+    {
+      id: '5',
+      title: 'Group 5',
+      summary:
+        'Another summary, make sure that this is very responsivesfafsdfsdfsdfsdfsfsfsdf',
+      date: '12/12/12',
+      tasks: '7',
+      participants: '7',
+    },
+    {
+      id: '6',
+      title: 'Group 6',
+      summary: 'Finalize them summary, hurry, we are close to deadline',
+      date: '12/12/12',
+      tasks: '7',
+      participants: '7',
+    },
   ];
 
   return (
@@ -43,21 +71,26 @@ export function Dashboard() {
       borderRadius="10px"
       justifyContent="center"
     >
-      <SimpleGrid columns={3}>
+      <Swiper
+        spaceBetween={50}
+        slidesPerView={3}
+        onSlideChange={() => console.log('slide change')}
+      >
         {dataList.map(function (data) {
           const { id, title, summary, date, tasks, participants } = data;
           return (
-            <Card
-              key={id}
-              title={title}
-              summary={summary}
-              date={date}
-              tasks={tasks}
-              participants={participants}
-            />
+            <SwiperSlide key={id}>
+              <Card
+                title={title}
+                summary={summary}
+                date={date}
+                tasks={tasks}
+                participants={participants}
+              />
+            </SwiperSlide>
           );
         })}
-      </SimpleGrid>
+      </Swiper>
     </Flex>
   );
 }

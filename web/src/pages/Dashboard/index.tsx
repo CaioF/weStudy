@@ -1,11 +1,17 @@
 import { Flex } from '@chakra-ui/react';
 /* eslint-disable import/no-unresolved */
-import { Swiper, SwiperSlide } from 'swiper/react';
+import { Swiper, SwiperSlide } from 'swiper/react'; // https://github.com/import-js/eslint-plugin-import/issues/2266
+import { Navigation } from 'swiper';
 import Card from '../../components/Card';
+
 import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/scrollbar';
 
 export function Dashboard() {
   const dataList = [
+    // TODO: Replace this with backend call service
     {
       id: '1',
       title: 'Group 1',
@@ -58,6 +64,13 @@ export function Dashboard() {
     },
   ];
 
+  const outerCarouselStyle = {
+    align: 'center',
+    textAlign: 'center' as const, // https://github.com/typestyle/typestyle/issues/281
+    justifyContent: 'center',
+    justify: 'space-between',
+  };
+
   return (
     <Flex
       height={{ base: 'auto', md: '80vh' }}
@@ -65,32 +78,62 @@ export function Dashboard() {
       width="100%"
       maxWidth="var(--maxWidth)"
       marginX="auto"
-      padding="16px"
       bgColor="gray.300"
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
       justifyContent="center"
+      flexDirection="column"
     >
-      <Swiper
-        spaceBetween={50}
-        slidesPerView={3}
-        onSlideChange={() => console.log('slide change')}
-      >
-        {dataList.map(function (data) {
-          const { id, title, summary, date, tasks, participants } = data;
-          return (
-            <SwiperSlide key={id}>
-              <Card
-                title={title}
-                summary={summary}
-                date={date}
-                tasks={tasks}
-                participants={participants}
-              />
-            </SwiperSlide>
-          );
-        })}
-      </Swiper>
+      <div style={outerCarouselStyle}>
+        <Swiper
+          modules={[Navigation]}
+          spaceBetween={30}
+          slidesPerView={3}
+          navigation
+          // onSwiper={swiper => console.log(swiper)}
+          // onSlideChange={() => console.log('slide change')}
+        >
+          {dataList.map(function (data) {
+            const { id, title, summary, date, tasks, participants } = data;
+            return (
+              <SwiperSlide key={id}>
+                <Card
+                  title={title}
+                  summary={summary}
+                  date={date}
+                  tasks={tasks}
+                  participants={participants}
+                />
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+      </div>
+      <div>
+        <Swiper
+          modules={[Navigation]}
+          spaceBetween={50}
+          slidesPerView={3}
+          navigation
+          // onSwiper={swiper => console.log(swiper)}
+          // onSlideChange={() => console.log('slide change')}
+        >
+          {dataList.map(function (data) {
+            const { id, title, summary, date, tasks, participants } = data;
+            return (
+              <SwiperSlide key={id}>
+                <Card
+                  title={title}
+                  summary={summary}
+                  date={date}
+                  tasks={tasks}
+                  participants={participants}
+                />
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+      </div>
     </Flex>
   );
 }

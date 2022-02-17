@@ -271,6 +271,9 @@ function convertToStringTime(timeinput, timeZone){
         hr = timeinput.replace(min, "");
         hr = hr.length == 0 ? "00" : hr;
     }
+
+    min = min.length == 1 ? `0${min}` : min;
+    hr = hr.length == 1 ? `0${hr}` : hr;
     
     let utc = momentTZ.utc(`2000-01-01 ${hr}:${min}Z`);
     let local = utc.tz(timeZone).format("HH:mm");

@@ -125,7 +125,7 @@ async function getOrCreateAsync(collectionName, filter, update) {
     }
 }
 
-async function updateOneAsync(collectionName, filter, update) {
+async function updateOneAsync(collectionName, filter, update, postUpdateFilter) {
 
     if (!filter){
         return { success : false, error : "invalid filter supplied" };
@@ -133,6 +133,10 @@ async function updateOneAsync(collectionName, filter, update) {
 
     if (!update){
         return { success : false, error : "invalid update supplied" };
+    }
+
+    if (!postUpdateFilter){
+        postUpdateFilter = filter;
     }
 
     var collection = await tryGetCollection(collectionName);
@@ -149,7 +153,7 @@ async function updateOneAsync(collectionName, filter, update) {
             return { success : false, error : "Could not get or create record" };
         }
 
-        let record = await collection.payload.findOne(filter, {});       
+        let record = await collection.payload.findOne(postUpdateFilter, {});       
 
         if (!record){
             // could not find the new or old record, something went wrong

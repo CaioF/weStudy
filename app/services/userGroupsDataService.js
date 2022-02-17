@@ -4,8 +4,6 @@ const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
 const utility = require("../utility");
 
-// TODO:Times to be converted to UTC before saving
-
 var tryGetUserGroups = async function(userId) {
     
     // validate input
@@ -13,11 +11,73 @@ var tryGetUserGroups = async function(userId) {
         return { success : false, error : "Invalid userId" };
     }
 
-    //TODO:CO::Update query to include groups I have joined (contained in members)
-    let groups = await dataService.getManyAsync(collectionName, { "userId" : userId } );
+    var project = {
+        _id : 1,
+        ownerId : 1, 
+        name: 1, 
+        size : 1,
+        spots : 1,
+        timeZone : 1,
+        timeRanges : 1,
+        dateCreated: 1,
+        dateUpdated: 1
+    };
 
-    // return the user 
-    return { success : true, payload : groups.payload };
+    let groups = await dataService.getManyAsync(collectionName, { $or : [ 
+        { ownerId : userId },
+        { members : { $elemMatch : { userId : userId, status : 1 } } }
+     ]}, project);
+
+    let convertedGroups = [];
+    groups.payload.forEach(g => {
+        convertedGroups.push(convertDocument(g));        
+    }); 
+
+    // return the users
+    return { success : true, payload : convertedGroups };
+};
+
+/** Get a specific group if you are an approved member or the owner */
+var tryGetGroup = async function(userId, groupId) {
+    
+    // validate input
+    if (!userId){
+        return { success : false, error : "Invalid userId" };
+    }
+
+    if (!groupId){
+        return { success : false, error : "Invalid groupId" };
+    }
+
+    var project = {
+        _id : 1,
+        ownerId : 1, 
+        name: 1, 
+        description : 1,
+        size : 1,
+        spots : 1,
+        timeZone : 1,
+        members : 1,
+        timeRanges : 1,
+        dateCreated: 1,
+        dateUpdated: 1
+    };
+
+    let group = await dataService.getOneAsync(collectionName, { "_id" : dataService.toDbiD(groupId) }, project);
+    if (!group.success){
+        return { success : false, payload : `Could not find group with id ${groupId}` };
+    }
+
+    // The user cannot access the group if he is not an apporved memeber or the group owner
+    if (group.payload.members.filter(x => x.userId == userId && x.status == 1).length > 0 || group.ownerId == userId){
+        let convertedGroup = convertDetailedDocument(group.payload);
+
+        // return the group
+        return { success : true, payload : convertedGroup };
+    }
+    
+    return { success : false, error : `Access to group with id ${groupId} denied` };
+    
 };
 
 var createNewGroup = async function(userId, group) {
@@ -28,19 +88,34 @@ var createNewGroup = async function(userId, group) {
         return { success : false, error : errors };
     }
 
+    var times = [];
+
+    group.timeRanges.forEach(tz => {
+        let utcStart = convertToUtcInt(tz.startTime, group.timeZone);
+        let utcEnd = convertToUtcInt(tz.endTime, group.timeZone);
+        times.push({ day : tz.day, utcStartTime : utcStart, utcEndTime : utcEnd });
+    });  
+
     const update = { 
         $setOnInsert : { 
-            userId: userId, 
+            ownerId: userId, 
             name: group.name, 
+            description : group.description,
             size : group.size,
             spots : group.size,
             timeZone : group.timeZone,
-            timeRanges : group.timeRanges,
+            timeRanges : times,
+            members : [],
             dateCreated: new Date(),
             dateUpdated: new Date() }
     }
-    
-    return await dataService.getOrCreateAsync(collectionName, { "userId" : userId, "name": group.name }, update); 
+
+    let document = await dataService.getOrCreateAsync(collectionName, { "ownerId" : userId, "name": group.name }, update);    
+    if (!document.success){
+        return { success : false, error : `Could not create a new group : ${document.error}` };
+    }
+
+    return { success : true, payload : convertDocument(document.payload) };
 };
 
 var tryUpdateGroup = async function(userId, groupId, group) {
@@ -51,7 +126,7 @@ var tryUpdateGroup = async function(userId, groupId, group) {
         return { success : false, error : errors };
     }
 
-    let filter = { "userId" : userId, "_id" : dataService.toDbiD(groupId) };
+    let filter = { "ownerId" : userId, "_id" : dataService.toDbiD(groupId) };
 
     // second find the group, the user can only update his own group
     let existingGroup = await dataService.getOneAsync(collectionName, filter);
@@ -59,19 +134,25 @@ var tryUpdateGroup = async function(userId, groupId, group) {
         return { success : false, error : existingGroup.error };
     }
  
-     const update = { 
-         $set : { 
-             userId: userId, 
-             name: group.name, 
-             subject: group.subject, 
-             size : group.size,
-             timeZone : group.timeZone,
-             timeRanges : group.timeRanges,
-             members : [],
-             dateUpdated: new Date() }
+    const update = { 
+        $set : { 
+            ownerId: userId, 
+            name: group.name, 
+            description: group.description, 
+            subject: group.subject, 
+            size : group.size,
+            timeZone : group.timeZone,
+            timeRanges : group.timeRanges,
+            members : [],
+            dateUpdated: new Date() }
      }
-     
-     return await dataService.updateOneAsync(collectionName, filter, update); 
+
+     let doc = await dataService.updateOneAsync(collectionName, filter, update);     
+     if (!doc.success){
+         return { success : false, error : `Could not update group with id '${groupId}'` };
+     }
+
+     return { success : true, payload : convertDocument(doc.payload) };
 }
 
 var deleteGroup = async function(userId, groupId) { 
@@ -82,8 +163,7 @@ var deleteGroup = async function(userId, groupId) {
         return { success : false, error : existingGroup.error };
     }
  
-    return { success : true };
-}
+    return { success : true };}
 
 var searchGroup = async function(searchRequest) {
     
@@ -122,8 +202,157 @@ var searchGroup = async function(searchRequest) {
     };
 
     let groups = await dataService.getManyAsync(collectionName, filter );
+    let convertedGroups = [];
+    groups.payload.forEach(g => {
+        convertedGroups.push(convertDocument(g));        
+    }); 
 
-    return groups;
+    return convertedGroups;
+}
+
+var tryRequestJoin = async function(userId, groupId) {
+
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName, { "_id" : dataService.toDbiD(groupId) } );
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+
+    if (group.payload.ownerId == userId){
+        return { success : false, error : `Already joined to own group` };
+    }
+
+    if (group.payload.members.includes(x => x.userId == userId)){
+        return { success : false, error : `Already joined to this group` };
+    }
+
+    if (group.payload.spots < 1){
+        return { success : false, error : `Group is full` };
+    }
+
+    // update the group atomically
+    const update = { 
+        $inc : { spots : -1 },
+        $push : { members : { userId : userId, dateRequested : new Date(), status : 0 } }
+    };
+
+    const filter = { 
+        "_id" : dataService.toDbiD(groupId),
+        spots : { $gte : 1 },
+        ownerId : { $ne : userId },
+        members : { $not: { $elemMatch : { userId : userId }}}
+    };
+
+    let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!groupJoin.success){
+        return { success : false, error : `Unable to join group, please try again.` }; 
+    }
+
+    return  { success : true };
+}
+
+var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!requestUserId){
+        return { success : false, error : `Invalid requestUserId` };
+    }
+
+    
+}
+
+/** Convert the stored time number to string and apply the timezone
+ * 150 --> 1:50
+ * 1500 --> 15:00
+ * 2315 --> 23:15
+ */
+function convertToStringTime(timeinput, timeZone){
+
+    let min = "00";
+    let hr = "00";
+
+    if (timeinput.length > 1){
+        min = timeinput.substring(Math.max(timeinput.length - 2, 1));
+        hr = timeinput.replace(min, "");
+        hr = hr.length == 0 ? "00" : hr;
+    }
+
+    min = min.length == 1 ? `0${min}` : min;
+    hr = hr.length == 1 ? `0${hr}` : hr;
+    
+    let utc = momentTZ.utc(`2000-01-01 ${hr}:${min}Z`);
+    let local = utc.tz(timeZone).format("HH:mm");
+    return local;
+}
+
+/** We need to convert from the stored document to the api output */
+function convertDocument(doc){
+
+    let times = [];
+
+    doc.timeRanges.forEach(tz => {
+        let startTime = convertToStringTime(tz.utcStartTime.toString(), doc.timeZone);
+        let entTime = convertToStringTime(tz.utcEndTime.toString(), doc.timeZone);
+        times.push({ day : tz.day, startTime : startTime, entTime : entTime });
+    }); 
+
+    var returnObj = {
+        ownerId : doc.ownerId,
+        name: doc.name, 
+        description: doc.description, 
+        subject: doc.subject, 
+        size : doc.size,
+        availibleSpots : doc.spots,
+        timeZone : doc.timeZone,
+        timeRanges : times,
+        dateCreated: doc.dateCreated,
+        dateUpdated: doc.dateUpdated
+    };
+
+    return returnObj;
+}
+
+/** Similar to convertDocument, but the full payload */
+function convertDetailedDocument(doc, userId){
+
+    let converted = convertDocument(doc);
+    converted["isOwner"] = userId == doc.ownerId;
+    converted["members"] = doc.members;
+
+    return converted;
+}
+
+/** Convert the input date from the given timezone to utc */
+function convertToUtcInt(timeinput, timeZone){
+
+    /* 
+        I had some issues using the library, 
+        no matter what it seemed to always take the input as UTC and then applying the timezone
+        As a solution, I get the timezone offset and then manually build the ISO string, 
+        then create the moment object, which I can then convert to UTC
+    */
+    let offSet = momentTZ().tz(timeZone).format('ZZ');
+
+    // The date here is irrelevant as we only need the time
+    let utc = momentTZ.utc(`2000-01-01 ${timeinput}${offSet}`);
+    let hm = utc.format("HHmm");
+    return parseInt(hm);
 }
 
 function validateGroup(group, userId){
@@ -167,13 +396,40 @@ function validateGroup(group, userId){
                 errors.push("Invalid day in timeRange element " + i);
             }
 
-            if (group.timeRanges[i].startTime < 0 || group.timeRanges[i].startTime > 2359){
+            // convert and check start time
+            var start = parseInt(group.timeRanges[i].startTime.replace(":", ""));
+            if (!start){
+                errors.push("Invalid startTime in timeRange element " + i);
+            }
+
+            if (start < 0 || start > 2359){
                 errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
             }
 
-            if (group.timeRanges[i].endTime < 0 || group.timeRanges[i].endTime > 2359){
+            // convert and check end time
+            var end = parseInt(group.timeRanges[i].endTime.replace(":", ""));
+            if (!end){
+                errors.push("Invalid endTime in timeRange element " + i);
+            }
+
+            if (end < 0 || end > 2359){
                 errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
             }
+
+            if (start > end){
+                errors.push("Invalid endTime in timeRange element " + i + ", endtime has to be greater than startTime");
+            }
+
+            // group.timeRanges[i].convertedStartTime = convertTime(group.timeRanges[i].startTime);   
+            // if (group.timeRanges[i].convertedStartTime.timeNumber < 0 || group.timeRanges[i].convertedStartTime.timeNumber > 2359){
+            //     errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
+            // }
+
+            //  // convert and check end time
+            //  group.timeRanges[i].convertedEndTime = convertTime(group.timeRanges[i].endTime);
+            // if (group.timeRanges[i].convertedEndTime.timeNumber < 0 || group.timeRanges[i].convertedEndTime.timeNumber > 2359){
+            //     errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
+            // }
         }
     }
 
@@ -210,3 +466,6 @@ module.exports.createNewGroup = createNewGroup;
 module.exports.tryUpdateGroup = tryUpdateGroup;
 module.exports.deleteGroup = deleteGroup;
 module.exports.searchGroup = searchGroup;
+module.exports.tryRequestJoin = tryRequestJoin;
+module.exports.tryGetGroup = tryGetGroup;
+module.exports.tryApproveUserRequest = tryApproveUserRequest;

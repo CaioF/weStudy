@@ -34,7 +34,7 @@ router.post('/auth', async (req, res) => {
 
 /** This is the signup function, 
  * Simlar to auth, but instead we will create the user if it does not exists. */
- router.post('/signUp', async (req, res) => { 
+router.post('/signUp', async (req, res) => { 
 
   try{      
     const { token }  = req.body
@@ -48,7 +48,7 @@ router.post('/auth', async (req, res) => {
        return;
      }
 
-     res.json({ token : user.payload });
+     res.json(user.payload);
   }
   catch (e) {
     console.log(e);

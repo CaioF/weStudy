@@ -2,27 +2,24 @@
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require('body-parser')
-
+const dotenv = require('dotenv');
 const sessions = require('express-session')
 const authService = require("./app/services/authService");
 
-if (process.env.NODE_ENV !== 'production') {
-  const dotenv = require('dotenv');
-  dotenv.config();
-}
 // initialize variables
+dotenv.config();
 const app = express()
-const port = process.env.PORT;
+const port = process.env.port;
 
 // initialize app (our server)
 app.use(cors({
-  origin : process.env.uiOrigin,
+  origin : process.env.uiOrigin, // move to config
   credentials: true, 
   allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie'
 }));
 
 app.use(sessions({
-  secret: process.env.jwtSecret,
+  secret: process.env.jwtSecret, // move to config
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }

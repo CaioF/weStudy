@@ -4,6 +4,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const dotenv = require('dotenv');
 const sessions = require('express-session')
+const path = require('path');
 const authService = require("./app/services/authService");
 
 // initialize variables
@@ -57,10 +58,14 @@ app.use("/api/users", require("./app/controllers/users"));
 app.use("/api/userGroups", require("./app/controllers/userGroups"));
 app.use("/secure", require("./app/controllers/auth"));
 app.use("/api/meta", require("./app/controllers/meta"));
-// basic route
-app.get('/', async (req, res) => { 
-  res.send("Welcome to weStudy");
-});
+
+// set static folder
+app.use(express.static(path.join(__dirname, 'public')));
+
+// react-router will take care of spa routing 
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+})
 
 // Start webserver and listen for connections
 app.listen(port, () => {  

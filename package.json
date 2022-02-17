@@ -7,8 +7,10 @@
     "install:server": "npm install --prefix server",
     "install:web": "npm install --prefix web",
     "install": "npm run install:server && npm run install:web",
-    "server:dev": "npm run dev --prefix server",
     "web:dev": "npm start --prefix web",
+    "web:build": "npm run build --prefix web",
+    "server:dev": "npm run dev --prefix server",
+    "server:start": "npm run web:build && npm run start --prefix server",
     "dev": "npm run server:dev & npm run web:dev"
   },
   "repository": {

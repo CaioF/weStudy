@@ -17,6 +17,18 @@ router.get("/", async function (req, res) {
     }    
 });
 
+/** Get a specific group */
+router.get("/:groupId", async function (req, res) {
+
+    const result = await dataService.tryGetGroup(req.session.userId, req.params.groupId); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
 /** Create a new group */
 router.post("/", async function (req, res) {
 
@@ -41,7 +53,6 @@ router.post("/find", async function (req, res) {
     }    
 });
 
-
 /** update group */
 router.put("/:groupId", async function (req, res) {
 
@@ -53,6 +64,19 @@ router.put("/:groupId", async function (req, res) {
         res.status(400).json(result.error);
     }    
 });
+
+/** request to join a group */
+router.post("/:groupId/join", async function (req, res) {
+
+    const result = await dataService.tryRequestJoin(req.session.userId, req.params.groupId); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
 
 /** delete group */
 router.delete("/:groupId", async function (req, res) {

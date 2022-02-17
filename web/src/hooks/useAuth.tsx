@@ -49,7 +49,12 @@ const AuthProvider: React.FC = ({ children }) => {
         token: res.tokenId,
       })
       .then(response => {
-        const { token, user } = response.data;
+        const { token } = response.data;
+        // @TODO: get user from response.data once it is implemented in the backend
+        const user = {
+          id: 'fake_id',
+          name: 'fake_name',
+        };
         localStorage.setItem('@weStudy:token', token);
         localStorage.setItem('@weStudy:user', JSON.stringify(user));
 
@@ -66,7 +71,13 @@ const AuthProvider: React.FC = ({ children }) => {
         token: res.tokenId,
       })
       .then(response => {
-        const { token, user } = response.data;
+        const { token } = response.data;
+        // @TODO: get user from response.data once it is implemented in the backend
+        const user = {
+          id: 'fake_id',
+          name: 'fake_name',
+        };
+
         localStorage.setItem('@weStudy:token', token);
         localStorage.setItem('@weStudy:user', JSON.stringify(user));
 
@@ -78,7 +89,6 @@ const AuthProvider: React.FC = ({ children }) => {
   }
 
   const signOut = useCallback(() => {
-    console.log('signOut');
     localStorage.removeItem('@weStudy:token');
     localStorage.removeItem('@weStudy:user');
 

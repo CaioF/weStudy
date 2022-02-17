@@ -40,7 +40,7 @@ export function Home() {
         <Heading mb="20px">Welcome to weStudy</Heading>
 
         <Text maxWidth="500px" mb="20px" alignSelf="flex-end">
-          A platform that connect students through studying groups.
+          A platform that connect students through study groups.
         </Text>
 
         <Link to={routes.signIn.path}>

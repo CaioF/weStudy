@@ -9,7 +9,7 @@ const authService = require("./app/services/authService");
 // initialize variables
 dotenv.config();
 const app = express()
-const port = process.env.port;
+const port = process.env.PORT; // heroku adds PORT -->
 
 // initialize app (our server)
 app.use(cors({

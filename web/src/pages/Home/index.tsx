@@ -37,12 +37,10 @@ export function Home() {
         paddingX="30px"
         alignSelf={{ base: 'center', md: 'unset' }}
       >
-        <Heading mb="20px">Welcome to Lorem Ipsum</Heading>
+        <Heading mb="20px">Welcome to weStudy</Heading>
 
         <Text maxWidth="500px" mb="20px" alignSelf="flex-end">
-          In publishing and graphic design, Lorem ipsum is a placeholder text
-          commonly used to demonstrate the visual form of a document or a
-          typeface without relying on meaningful content
+          We are a platform that connect students through studying groups.
         </Text>
 
         <Link to={routes.signIn.path}>

@@ -1,4 +1,4 @@
-<img src="public/design.png" alt="weStudy design">
+<img src=".github/design.png" alt="weStudy design">
 
 # weStudy
 

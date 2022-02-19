@@ -38,7 +38,9 @@ var tryGetUserGroups = async function(userId) {
     return { success : true, payload : convertedGroups };
 };
 
-/** Get a specific group if you are an approved member or the owner */
+/** Get a specific group if you are an approved member or the owner.
+ * This includes the group details like members and tasks
+ */
 var tryGetGroup = async function(userId, groupId) {
     
     // validate input
@@ -81,7 +83,7 @@ var tryGetGroup = async function(userId, groupId) {
     
 };
 
-/** create a new group  */  
+/** create a new group using the supplied payload  */  
 var createNewGroup = async function(userId, group) {
     
     // validate input    
@@ -120,7 +122,7 @@ var createNewGroup = async function(userId, group) {
     return { success : true, payload : convertDocument(document.payload) };
 };
 
-/** update a group  */  
+/** update a group, overwriting the existing group with the given payload  */  
 var tryUpdateGroup = async function(userId, groupId, group) {
 
     // first validate input    
@@ -158,7 +160,7 @@ var tryUpdateGroup = async function(userId, groupId, group) {
      return { success : true, payload : convertDocument(doc.payload) };
 }
 
-/** delete a group  */    
+/** delete a group from the collection  */    
 var deleteGroup = async function(userId, groupId) { 
 
     let filter = { "ownerId" : userId, "_id" : dataService.toDbiD(groupId) };
@@ -215,10 +217,11 @@ var searchGroup = async function(searchRequest) {
     return convertedGroups;
 }
 
-/** Try to create a join request 
- *  Join request status :   0 -> pending
-                            1 -> approved
-                            3 -> kicked
+/** Try to create a join request.
+ * For this we will insert a new request in the memebers array with a status of 0
+ * Join request status : 0 -> pending
+ *                       1 -> approved
+ *                       3 -> kicked
 */
 var tryRequestJoin = async function(userId, groupId) {
 
@@ -272,7 +275,9 @@ var tryRequestJoin = async function(userId, groupId) {
     return  { success : true };
 }
 
-/** Try to approve a pending request */
+/** Try to approve a pending request. 
+ * To approve we need to change the existing request in the members array to the status 1 (approved)
+ *  */
 var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     // validate input
     if (!userId){
@@ -354,7 +359,9 @@ function convertToStringTime(timeinput, timeZone){
     return local;
 }
 
-/** We need to convert from the stored document to the api output */
+/** We need to convert from the stored document to the api output. 
+ * This means we need to convert the stored time numbers to a more friendly string format 
+ **/
 function convertDocument(doc){
 
     let times = [];
@@ -382,7 +389,9 @@ function convertDocument(doc){
     return returnObj;
 }
 
-/** Similar to convertDocument, but the full payload */
+/** Similar to convertDocument, but the full payload, 
+ * which includes the isOwner flag, members in group, 
+ * and the tasks */
 function convertDetailedDocument(doc, userId){
 
     let converted = convertDocument(doc);
@@ -439,7 +448,6 @@ function validateGroup(group, userId){
         errors.push("Invalid group timeZone specified, check the meta to get the correct timezone");
     }
 
-    //TODO:CO:: we need to specify the time/date
     if (!group.timeRanges){
         errors.push("Invalid group timeRanges specified");
     }
@@ -473,17 +481,6 @@ function validateGroup(group, userId){
             if (start > end){
                 errors.push("Invalid endTime in timeRange element " + i + ", endtime has to be greater than startTime");
             }
-
-            // group.timeRanges[i].convertedStartTime = convertTime(group.timeRanges[i].startTime);   
-            // if (group.timeRanges[i].convertedStartTime.timeNumber < 0 || group.timeRanges[i].convertedStartTime.timeNumber > 2359){
-            //     errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            // }
-
-            //  // convert and check end time
-            //  group.timeRanges[i].convertedEndTime = convertTime(group.timeRanges[i].endTime);
-            // if (group.timeRanges[i].convertedEndTime.timeNumber < 0 || group.timeRanges[i].convertedEndTime.timeNumber > 2359){
-            //     errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            // }
         }
     }
 

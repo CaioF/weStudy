@@ -62,11 +62,11 @@ app.use("/api/meta", require("./app/controllers/meta"));
 let webRoot =  path.join(__dirname, '..', 'web', 'public');
 
 // set static folder
-app.use(express.static(path.join(webRoot, 'public')));
+app.use(express.static(path.join(webRoot)));
 
 // react-router will take care of spa routing 
 app.get('/*', (req, res) => {
-  res.sendFile(path.join(webRoot, 'public', 'index.html'))
+  res.sendFile(path.join(webRoot, 'index.html'))
 })
 
 // Start webserver and listen for connections

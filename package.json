@@ -11,7 +11,9 @@
     "web:build": "npm run build --prefix web",
     "server:dev": "npm run dev --prefix server",
     "server:start": "npm run web:build && npm run start --prefix server",
-    "dev": "npm run server:dev & npm run web:dev"
+    "dev": "npm run server:dev & npm run web:dev",
+    "build" : "npm run install",
+    "start": "npm run start --prefix server"
   },
   "repository": {
     "type": "git",

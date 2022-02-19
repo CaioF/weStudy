@@ -4,6 +4,12 @@ const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
 const utility = require("../utility");
 
+/*
+    Join request status :   0 -> pending
+                            1 -> approved
+                            3 -> kicked
+*/
+
 var tryGetUserGroups = async function(userId) {
     
     // validate input
@@ -23,6 +29,7 @@ var tryGetUserGroups = async function(userId) {
         dateUpdated: 1
     };
 
+    // status : 1 = approved
     let groups = await dataService.getManyAsync(collectionName, { $or : [ 
         { ownerId : userId },
         { members : { $elemMatch : { userId : userId, status : 1 } } }
@@ -53,6 +60,7 @@ var tryGetGroup = async function(userId, groupId) {
         _id : 1,
         ownerId : 1, 
         name: 1, 
+        description : 1,
         size : 1,
         spots : 1,
         timeZone : 1,
@@ -99,6 +107,7 @@ var createNewGroup = async function(userId, group) {
         $setOnInsert : { 
             ownerId: userId, 
             name: group.name, 
+            description : group.description,
             size : group.size,
             spots : group.size,
             timeZone : group.timeZone,
@@ -136,6 +145,7 @@ var tryUpdateGroup = async function(userId, groupId, group) {
         $set : { 
             ownerId: userId, 
             name: group.name, 
+            description: group.description, 
             subject: group.subject, 
             size : group.size,
             timeZone : group.timeZone,
@@ -209,6 +219,7 @@ var searchGroup = async function(searchRequest) {
 
 var tryRequestJoin = async function(userId, groupId) {
 
+    // validate input
     if (!userId){
         return { success : false, error : `Invalid userId` };
     }
@@ -236,6 +247,7 @@ var tryRequestJoin = async function(userId, groupId) {
     }
 
     // update the group atomically
+    // status : 0 = pending
     const update = { 
         $inc : { spots : -1 },
         $push : { members : { userId : userId, dateRequested : new Date(), status : 0 } }
@@ -256,7 +268,46 @@ var tryRequestJoin = async function(userId, groupId) {
     return  { success : true };
 }
 
-/** Convert the stored time number to string and apply the timezone
+var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!requestUserId){
+        return { success : false, error : `Invalid requestUserId` };
+    }
+
+    let filter = { "_id" : dataService.toDbiD(groupId) };   
+    let existingGroup = await dataService.getOneAsync(collectionName, filter);
+    if (!existingGroup.success){
+        return { success : false, error : existingGroup.error };
+    }
+
+    // Only the group owner can approve requests
+    if (existingGroup.ownerId != userId){
+        return { success : false, error : "Only the group owner can approve requests" };;
+    }
+
+    let updateFilter = { 
+        ownerId : userId, 
+        _id : dataService.toDbiD(groupId),
+        members : { $elemMatch : { userId : requestUserId, status : 0 } } 
+    };
+
+    let updatedGroup = await dataService.updateOneAsync(collectionName, filter, updateFilter, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        return { success : false, error : "Unable to join group, please try again later" };
+    }
+
+     return { success : true };
+}
+
+/** onvert the stored time number to string and apply the timezone
  * 150 --> 1:50
  * 1500 --> 15:00
  * 2315 --> 23:15
@@ -294,6 +345,7 @@ function convertDocument(doc){
     var returnObj = {
         ownerId : doc.ownerId,
         name: doc.name, 
+        description: doc.description, 
         subject: doc.subject, 
         size : doc.size,
         availibleSpots : doc.spots,
@@ -446,3 +498,4 @@ module.exports.deleteGroup = deleteGroup;
 module.exports.searchGroup = searchGroup;
 module.exports.tryRequestJoin = tryRequestJoin;
 module.exports.tryGetGroup = tryGetGroup;
+module.exports.tryApproveUserRequest = tryApproveUserRequest;

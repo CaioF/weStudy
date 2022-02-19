@@ -9,17 +9,17 @@ const authService = require("./app/services/authService");
 // initialize variables
 dotenv.config();
 const app = express()
-const port = process.env.port;
+const port = process.env.PORT; // heroku adds PORT -->
 
 // initialize app (our server)
 app.use(cors({
-  origin : "http://localhost:3000", // move to config
+  origin : process.env.uiOrigin, 
   credentials: true, 
   allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie'
 }));
 
 app.use(sessions({
-  secret: 'asdasd9032jfdmf39md32mjkjkdm3', // move to config
+  secret: process.env.jwtSecret, 
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }

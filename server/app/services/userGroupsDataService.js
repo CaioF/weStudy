@@ -4,12 +4,6 @@ const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
 const utility = require("../utility");
 
-/*
-    Join request status :   0 -> pending
-                            1 -> approved
-                            3 -> kicked
-*/
-
 var tryGetUserGroups = async function(userId) {
     
     // validate input
@@ -87,6 +81,7 @@ var tryGetGroup = async function(userId, groupId) {
     
 };
 
+/** create a new group  */  
 var createNewGroup = async function(userId, group) {
     
     // validate input    
@@ -125,6 +120,7 @@ var createNewGroup = async function(userId, group) {
     return { success : true, payload : convertDocument(document.payload) };
 };
 
+/** update a group  */  
 var tryUpdateGroup = async function(userId, groupId, group) {
 
     // first validate input    
@@ -162,9 +158,10 @@ var tryUpdateGroup = async function(userId, groupId, group) {
      return { success : true, payload : convertDocument(doc.payload) };
 }
 
+/** delete a group  */    
 var deleteGroup = async function(userId, groupId) { 
 
-    let filter = { "userId" : userId, "_id" : dataService.toDbiD(groupId) };
+    let filter = { "ownerId" : userId, "_id" : dataService.toDbiD(groupId) };
     let existingGroup = await dataService.deleteOneAsync(collectionName, filter);
     if (!existingGroup.success){
         return { success : false, error : existingGroup.error };
@@ -172,6 +169,7 @@ var deleteGroup = async function(userId, groupId) {
  
     return { success : true };}
 
+/** search for a group  */    
 var searchGroup = async function(searchRequest) {
     
     // first validate input    
@@ -217,6 +215,11 @@ var searchGroup = async function(searchRequest) {
     return convertedGroups;
 }
 
+/** Try to create a join request 
+ *  Join request status :   0 -> pending
+                            1 -> approved
+                            3 -> kicked
+*/
 var tryRequestJoin = async function(userId, groupId) {
 
     // validate input
@@ -269,6 +272,7 @@ var tryRequestJoin = async function(userId, groupId) {
     return  { success : true };
 }
 
+/** Try to approve a pending request */
 var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     // validate input
     if (!userId){

@@ -59,12 +59,14 @@ app.use("/api/userGroups", require("./app/controllers/userGroups"));
 app.use("/secure", require("./app/controllers/auth"));
 app.use("/api/meta", require("./app/controllers/meta"));
 
+let webRoot =  path.join(__dirname, '..', 'web', 'public');
+
 // set static folder
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(webRoot, 'public')));
 
 // react-router will take care of spa routing 
 app.get('/*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'))
+  res.sendFile(path.join(webRoot, 'public', 'index.html'))
 })
 
 // Start webserver and listen for connections

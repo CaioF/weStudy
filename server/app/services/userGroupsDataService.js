@@ -76,8 +76,8 @@ var tryGetGroup = async function(userId, groupId) {
     }
 
     // The user cannot access the group if he is not an apporved memeber or the group owner
-    if (group.payload.members.filter(x => x.userId == userId && x.status == 1).length > 0 || group.ownerId == userId){
-        let convertedGroup = convertDetailedDocument(group.payload);
+    if (group.payload.members.filter(x => x.userId == userId && x.status == 1).length > 0 || group.payload.ownerId == userId){
+        let convertedGroup = convertDetailedDocument(group.payload, userId);
 
         // return the group
         return { success : true, payload : convertedGroup };
@@ -262,6 +262,7 @@ var tryRequestJoin = async function(userId, groupId) {
 
     let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
     if (!groupJoin.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
         return { success : false, error : `Unable to join group, please try again.` }; 
     }
 
@@ -289,7 +290,7 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     }
 
     // Only the group owner can approve requests
-    if (existingGroup.ownerId != userId){
+    if (existingGroup.payload.ownerId != userId){
         return { success : false, error : "Only the group owner can approve requests" };;
     }
 
@@ -299,9 +300,27 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
         members : { $elemMatch : { userId : requestUserId, status : 0 } } 
     };
 
-    let updatedGroup = await dataService.updateOneAsync(collectionName, filter, updateFilter, { _id : dataService.toDbiD(groupId) });
+    // find the user index in the array
+    let userIndex = -1;
+    for (let idx = 0; idx < existingGroup.payload.members.length; idx++) {
+        if (existingGroup.payload.members[idx].userId == requestUserId){
+            userIndex = idx;
+            break;
+        }        
+    }
+
+    if (userIndex < 0){
+        return { success : false, error : "Could not find user request" };
+    }
+
+    let update = {
+        $set : { [`members.${userIndex}.status`] : 1}
+    }
+
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
     if (!updatedGroup.success){
-        return { success : false, error : "Unable to join group, please try again later" };
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to approve join request, please try again later" };
     }
 
      return { success : true };
@@ -342,7 +361,8 @@ function convertDocument(doc){
         times.push({ day : tz.day, startTime : startTime, entTime : entTime });
     }); 
 
-    var returnObj = {
+    var returnObj = {        
+        id : doc.id,
         ownerId : doc.ownerId,
         name: doc.name, 
         description: doc.description, 

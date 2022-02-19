@@ -5,11 +5,14 @@ const bodyParser = require('body-parser')
 const dotenv = require('dotenv');
 const sessions = require('express-session')
 const authService = require("./app/services/authService");
+const path = require('path');
+const root = path.normalize(__dirname + '/..');
 
 // initialize variables
 dotenv.config();
 const app = express()
 const port = process.env.PORT; // heroku adds PORT -->
+const webRoot = root + '/web/public'; //path.join(root, '..', 'web', 'public');
 
 // initialize app (our server)
 app.use(cors({
@@ -53,14 +56,21 @@ app.use('/api', async (req, res, next) => {
 
 // configure routes, bscially ulr paths that when called externally, 
 // will delegate control to the specified script in the routers folder
+app.get('/echo', async (req, res) => { 
+  res.send("Welcome to weStudy");
+});
 app.use("/api/users", require("./app/controllers/users"));
 app.use("/api/userGroups", require("./app/controllers/userGroups"));
 app.use("/secure", require("./app/controllers/auth"));
 app.use("/api/meta", require("./app/controllers/meta"));
-// basic route
-app.get('/', async (req, res) => { 
-  res.send("Welcome to weStudy");
-});
+
+// set static folder
+app.use(express.static(webRoot));
+
+// react-router will take care of spa routing 
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(webRoot, 'index.html'))
+})
 
 // Start webserver and listen for connections
 app.listen(port, () => {  

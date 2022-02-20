@@ -330,7 +330,7 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
         return { success : false, error : "Unable to approve join request, please try again later" };
     }
 
-     return { success : true };
+    return { success : true };
 }
 
 /** Try to approve a pending request. 
@@ -437,6 +437,54 @@ var tryCreateTask = async function(userId, groupId, task) {
     }
 
     return  { success : true };
+}
+
+var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
+
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!taskId){
+        return { success : false, error : `Invalid taskId` };
+    }
+
+    if (!targetUserId){
+        return { success : false, error : `Invalid targetUserId` };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id '${groupId}'` }
+    }
+
+    if (!group.payload.tasks.some(x => x.id == taskId)){
+        return { success : false, error : `Could not find task with id '${taskId}'` };
+    }
+
+    let updateFilter = { 
+        _id : dataService.toDbiD(groupId),
+        "tasks.id" : taskId
+    };
+    
+    let update = {
+        $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() }
+    }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to assign task, please try again later" };
+    }
+
+    return { success : true, payload : "Task asigned" }
 }
 
 /** onvert the stored time number to string and apply the timezone
@@ -644,3 +692,4 @@ module.exports.tryGetGroup = tryGetGroup;
 module.exports.tryApproveUserRequest = tryApproveUserRequest;
 module.exports.tryKickUser = tryKickUser;
 module.exports.tryCreateTask = tryCreateTask;
+module.exports.tryAssignTask = tryAssignTask;

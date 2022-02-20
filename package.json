@@ -12,7 +12,7 @@
     "server:dev": "npm run dev --prefix server",
     "server:start": "npm run web:build && npm run start --prefix server",
     "dev": "npm run server:dev & npm run web:dev",
-    "build" : "npm run install",
+    "build": "npm run install",
     "start": "node ./server/server.js"
   },
   "repository": {
@@ -25,5 +25,7 @@
   "bugs": {
     "url": "https://github.com/Codendaal1120/Uol-Agile-cm2020/issues"
   },
-  "homepage": "https://github.com/Codendaal1120/Uol-Agile-cm2020#readme"
+  "homepage": "https://github.com/Codendaal1120/Uol-Agile-cm2020#readme",
+  "dependencies": {
+  }
 }

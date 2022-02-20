@@ -412,6 +412,11 @@ var tryCreateTask = async function(userId, groupId, task) {
     if (group.payload.tasks.includes(x => x.name == task.name)){
         return { success : false, error : `Task already exists` };
     }
+
+    // check if user is a member of the group or the group owner
+    if (group.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
+    }
   
     // update the group atomically
     // status : 0 = not assigned

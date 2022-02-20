@@ -12,7 +12,7 @@
     "server:dev": "npm run dev --prefix server",
     "server:start": "npm run web:build && npm run start --prefix server",
     "dev": "npm run server:dev & npm run web:dev",
-    "build": "npm run install",
+    "build": "npm run install:server && npm run install:web",
     "start": "node ./server/server.js"
   },
   "repository": {

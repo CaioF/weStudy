@@ -195,7 +195,7 @@ async function deleteOneAsync(collectionName, filter) {
 
 async function tryGetCollection(collectionName){
     // note to self, local connection was failing untill I changed the replicaSet host to the IP used in the connection
-    const client = await MongoClient.connect(process.env.dbConnection, { useNewUrlParser: true, useUnifiedTopology: true })
+    const client = await MongoClient.connect(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
         .catch(err => { return { success : false, error : err.message } });
 
     if (!client) {

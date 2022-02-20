@@ -16,13 +16,13 @@ const webRoot = root + '/web/public'; //path.join(root, '..', 'web', 'public');
 
 // initialize app (our server)
 app.use(cors({
-  origin : process.env.uiOrigin, 
+  origin : process.env.ORIGIN, 
   credentials: true, 
   allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie'
 }));
 
 app.use(sessions({
-  secret: process.env.jwtSecret, 
+  secret: process.env.JWT_SECRET, 
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true }

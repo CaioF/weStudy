@@ -218,7 +218,8 @@ var searchGroup = async function(searchRequest) {
 }
 
 /** Try to create a join request.
- * For this we will insert a new request in the memebers array with a status of 0
+ * For this we will insert a new request in the memebers 
+ * array with a status of 0
  * Join request status : 0 -> pending
  *                       1 -> approved
  *                       3 -> kicked
@@ -276,8 +277,9 @@ var tryRequestJoin = async function(userId, groupId) {
 }
 
 /** Try to approve a pending request. 
- * To approve we need to change the existing request in the members array to the status 1 (approved)
- *  */
+ * To approve we need to change the existing request in the members 
+ * array to the status 1 (approved)
+ **/
 var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     // validate input
     if (!userId){
@@ -292,13 +294,17 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
         return { success : false, error : `Invalid requestUserId` };
     }
 
-    let filter = { "_id" : dataService.toDbiD(groupId) };   
+    // find the group to check if its valid, we could have updated directly, 
+    // which will improve performance
+    // but we would not know why it fails, if it did
+    let filter = { "_id" : dataService.toDbiD(groupId), members : { $elemMatch : { userId : requestUserId } }  };   
     let existingGroup = await dataService.getOneAsync(collectionName, filter);
     if (!existingGroup.success){
         return { success : false, error : existingGroup.error };
     }
 
-    // Only the group owner can approve requests
+    // Only the group owner can approve requests, again, 
+    // this could be done during the update
     if (existingGroup.payload.ownerId != userId){
         return { success : false, error : "Only the group owner can approve requests" };;
     }
@@ -306,30 +312,72 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     let updateFilter = { 
         ownerId : userId, 
         _id : dataService.toDbiD(groupId),
-        members : { $elemMatch : { userId : requestUserId, status : 0 } } 
+        "members.userId" : requestUserId,
+        "members.status" : 0,
+        //members : { $elemMatch : { userId : requestUserId, status : 0 } } 
+    };
+    
+    let update = {
+        $set : { "members.$.status": 1 }
+    }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to approve join request, please try again later" };
+    }
+
+     return { success : true };
+}
+
+/** Try to approve a pending request. 
+ * To kick/remove a user we need to remove the record from 
+ * the memebers array
+ **/
+ var tryKickUser = async function(userId, groupId, requestUserId) {
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!requestUserId){
+        return { success : false, error : `Invalid requestUserId` };
+    }
+
+    // find the group to check if its valid, we could have updated directly, 
+    // which will improve performance
+    // but we would not know why it fails, if it did
+    let filter = { "_id" : dataService.toDbiD(groupId) };   
+    let existingGroup = await dataService.getOneAsync(collectionName, filter);
+    if (!existingGroup.success){
+        return { success : false, error : existingGroup.error };
+    }
+
+    // Only the group owner can remove users, again, 
+    // this can be done during the update
+    if (existingGroup.payload.ownerId != userId){
+        return { success : false, error : "Only the group owner can approve requests" };;
+    }
+
+    let updateFilter = { 
+        ownerId : userId, 
+        _id : dataService.toDbiD(groupId),
+        "members.userId" : requestUserId
     };
 
-    // find the user index in the array
-    let userIndex = -1;
-    for (let idx = 0; idx < existingGroup.payload.members.length; idx++) {
-        if (existingGroup.payload.members[idx].userId == requestUserId){
-            userIndex = idx;
-            break;
-        }        
-    }
-
-    if (userIndex < 0){
-        return { success : false, error : "Could not find user request" };
-    }
-
     let update = {
-        $set : { [`members.${userIndex}.status`] : 1}
+        $pull: { members: { userId: requestUserId } }
     }
 
     let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
     if (!updatedGroup.success){
         console.error(`ERROR : ${updatedGroup.error}`);
-        return { success : false, error : "Unable to approve join request, please try again later" };
+        return { success : false, error : "Unable to remove user, please try again later" };
     }
 
      return { success : true };
@@ -520,3 +568,4 @@ module.exports.searchGroup = searchGroup;
 module.exports.tryRequestJoin = tryRequestJoin;
 module.exports.tryGetGroup = tryGetGroup;
 module.exports.tryApproveUserRequest = tryApproveUserRequest;
+module.exports.tryKickUser = tryKickUser;

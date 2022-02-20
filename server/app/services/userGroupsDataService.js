@@ -439,6 +439,7 @@ var tryCreateTask = async function(userId, groupId, task) {
     return updatedGroup;
 }
 
+/** Assign a task to a user, anyone in the group can do this */
 var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
 
     // validate input
@@ -456,6 +457,11 @@ var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
 
     if (!targetUserId){
         return { success : false, error : `Invalid targetUserId` };
+    }
+
+    // check if user is a member of the group or the group owner
+    if (group.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
     }
 
     // try to find the group

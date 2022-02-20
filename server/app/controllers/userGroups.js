@@ -29,6 +29,19 @@ router.get("/:groupId", async function (req, res) {
     }    
 });
 
+/** Get a direct join link for the user */
+router.get("/:groupId/link", async function (req, res) {
+
+    const result = await dataService.tryGetGroupLink(req.session.userId, req.params.groupId); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
+
 /** Create a new group */
 router.post("/", async function (req, res) {
 
@@ -77,6 +90,18 @@ router.post("/:groupId/RequestJoin", async function (req, res) {
     }    
 });
 
+/** request to join a group */
+router.post("/:groupId/joinWithlink/:linkId", async function (req, res) {
+
+    const result = await dataService.tryJoinWithLink(req.session.userId, req.params.groupId, req.params.linkId); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
 /** Approve request to join a group */
 router.post("/:groupId/approve/:requestUserId", async function (req, res) {
 
@@ -100,7 +125,6 @@ router.post("/:groupId/kick/:requestUserId", async function (req, res) {
         res.status(400).json(result.error);
     }    
 });
-
 
 /** Create a new task */
 router.post("/:groupId/tasks", async function (req, res) {

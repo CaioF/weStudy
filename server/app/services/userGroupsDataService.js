@@ -84,6 +84,47 @@ var tryGetGroup = async function(userId, groupId) {
     
 };
 
+var tryGetGroupLink = async function(userId, groupId){
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }    
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName, { "_id" : dataService.toDbiD(groupId) } );
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+    
+    // Only members can request a link
+    if (!isUserGroupMember(group.payload, userId)){
+        return { success : false, error : `Access denied to this group, only group members can request a join link` };
+    }
+
+    // if the group exists and the user is a member, we can create a link and store it on the group
+    let linkId = generateId();
+    const update = {         
+        $push : { links : { 
+            id : linkId,  
+            createdBy : userId,
+            dateCreated : new Date() } }
+    };
+
+    const updateFilter = { "_id" : dataService.toDbiD(groupId)};
+
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : `Unable to generate join link, please try again.` }; 
+    }
+
+    return { success : true, payload : `${process.env.ORIGIN}/api/userGroups/${groupId}/joinWithlink/${linkId}` }
+}
+
 /** create a new group using the supplied payload  */  
 var tryCreateNewGroup = async function(userId, group) {
     
@@ -320,7 +361,7 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     };
     
     let update = {
-        $set : { "members.$.status": 1 }
+        $set : { "members.$.status": 1, "members.$.dateJoined": new Date() }
     }
 
     // update the group
@@ -331,6 +372,64 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     }
 
     return { success : true, payload : "User join request approved" };
+}
+
+var tryJoinWithLink = async function(userId, groupId, linkId){
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!linkId){
+        return { success : false, error : `Invalid linkId` };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName, { "_id" : dataService.toDbiD(groupId) } );
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+
+    if (group.payload.ownerId == userId){
+        return { success : false, error : `Already joined to own group` };
+    }
+
+    if (group.payload.members.includes(x => x.userId == userId)){
+        return { success : false, error : `Already joined to this group` };
+    }
+
+    if (group.payload.spots < 1){
+        return { success : false, error : `Group is full` };
+    }
+
+    // update the group atomically
+    // status : 0 = pending
+    const update = { 
+        $inc : { spots : -1 },
+        $push : { members : { userId : userId, dateRequested : new Date(), status : 1, dateJoined : new Date() } },
+        $pull: { links: { id: linkId } }
+    };
+
+    const filter = { 
+        "_id" : dataService.toDbiD(groupId),
+        spots : { $gte : 1 },
+        ownerId : { $ne : userId },
+        "links.id" : linkId,
+        members : { $not: { $elemMatch : { userId : userId }}}
+    };
+
+    let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!groupJoin.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : `Unable to join group, please try again.` }; 
+    }
+
+    return  { success : true, payload : "Succsesfully join the group" };
+
 }
 
 /** Try to approve a pending request. 
@@ -412,9 +511,8 @@ var tryCreateTask = async function(userId, groupId, task) {
     if (group.payload.tasks.includes(x => x.name == task.name)){
         return { success : false, error : `Task already exists` };
     }
-
-    // check if user is a member of the group or the group owner
-    if (group.payload.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+  
+    if (!isUserGroupMember(group.payload, userId)){
         return { success : false, error : `Access denied to this group, only group members can assign tasks` };
     }
   
@@ -422,7 +520,7 @@ var tryCreateTask = async function(userId, groupId, task) {
     // status : 0 = not assigned
     const update = {         
         $push : { tasks : { 
-            id : uuid.v1(),  
+            id : generateId(),  
             name : task.name,            
             status : 0, 
             description : task.description,
@@ -471,7 +569,7 @@ var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
     }
 
     // check if user is a member of the group or the group owner
-    if (group.payload.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+    if (!isUserGroupMember(group.payload, userId)){
         return { success : false, error : `Access denied to this group, only group members can assign tasks` };
     }
 
@@ -520,7 +618,7 @@ var tryCompleteTask = async function(userId, groupId, taskId){
 
     // check if user is a member of the group or the group owner
     // We could make this so that only the assigned user can update a task.
-    if (group.payload.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+    if (!isUserGroupMember(group.payload, userId)){
         return { success : false, error : `Access denied to this group, only group members can update tasks` };
     }
 
@@ -545,6 +643,10 @@ var tryCompleteTask = async function(userId, groupId, taskId){
     }
 
     return { success : true, payload : "Task updated" }
+}
+
+function generateId(){
+    return uuid.v1().replace("-", "");
 }
 
 /** onvert the stored time number to string and apply the timezone
@@ -742,6 +844,11 @@ function validateTask(task){
     return errors;
 }
 
+/** check if user is a member of the group or the group owner */
+function isUserGroupMember(group, userId){
+    return group.ownerId == userId || group.members.some(x => x.userId == userId);
+}
+
 module.exports.tryGetUserGroups = tryGetUserGroups;
 module.exports.tryCreateNewGroup = tryCreateNewGroup;
 module.exports.tryUpdateGroup = tryUpdateGroup;
@@ -754,3 +861,5 @@ module.exports.tryKickUser = tryKickUser;
 module.exports.tryCreateTask = tryCreateTask;
 module.exports.tryAssignTask = tryAssignTask;
 module.exports.tryCompleteTask = tryCompleteTask;
+module.exports.tryGetGroupLink = tryGetGroupLink;
+module.exports.tryJoinWithLink = tryJoinWithLink;

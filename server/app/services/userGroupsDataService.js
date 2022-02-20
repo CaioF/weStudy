@@ -171,7 +171,7 @@ var deleteGroup = async function(userId, groupId) {
         return { success : false, error : existingGroup.error };
     }
  
-    return { success : true };}
+    return { success : true, payload : "Group deleted" };}
 
 /** search for a group  */    
 var searchGroup = async function(searchRequest) {
@@ -275,7 +275,7 @@ var tryRequestJoin = async function(userId, groupId) {
         return { success : false, error : `Unable to join group, please try again.` }; 
     }
 
-    return  { success : true };
+    return  { success : true, payload : "Join request submitted" };
 }
 
 /** Try to approve a pending request. 
@@ -330,7 +330,7 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
         return { success : false, error : "Unable to approve join request, please try again later" };
     }
 
-    return { success : true };
+    return { success : true, payload : "User join request approved" };
 }
 
 /** Try to approve a pending request. 
@@ -382,7 +382,7 @@ var tryKickUser = async function(userId, groupId, requestUserId) {
         return { success : false, error : "Unable to remove user, please try again later" };
     }
 
-     return { success : true };
+     return { success : true, payload : " User kicked from group" };
 }
 
 /** Create a new task
@@ -430,13 +430,13 @@ var tryCreateTask = async function(userId, groupId, task) {
         tasks : { $not: { $elemMatch : { name : task.name }}}
     };
 
-    let groupJoin = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
-    if (!groupJoin.success){
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!updatedGroup.success){
         console.error(`ERROR : ${updatedGroup.error}`);
         return { success : false, error : `Unable to add task to group, please try again.` }; 
     }
 
-    return  { success : true };
+    return updatedGroup;
 }
 
 var tryAssignTask = async function(userId, groupId, taskId, targetUserId){

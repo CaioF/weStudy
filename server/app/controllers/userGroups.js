@@ -126,6 +126,17 @@ router.post("/:groupId/tasks/:taskId/assign/:targetUserId", async function (req,
     }    
 });
 
+/** Update task as completed */
+router.post("/:groupId/tasks/:taskId/complete", async function (req, res) {
+
+    const result = await dataService.tryCompleteTask(req.session.userId, req.params.groupId, req.params.taskId); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
 
 
 module.exports = router;

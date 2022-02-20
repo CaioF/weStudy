@@ -414,7 +414,7 @@ var tryCreateTask = async function(userId, groupId, task) {
     }
 
     // check if user is a member of the group or the group owner
-    if (group.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+    if (group.payload.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
         return { success : false, error : `Access denied to this group, only group members can assign tasks` };
     }
   
@@ -462,17 +462,17 @@ var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
 
     if (!targetUserId){
         return { success : false, error : `Invalid targetUserId` };
-    }
-
-    // check if user is a member of the group or the group owner
-    if (group.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
-        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
-    }
+    }    
 
     // try to find the group
     let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
     if (!group.success){
         return { success : false, error : `Could not find group with id '${groupId}'` }
+    }
+
+    // check if user is a member of the group or the group owner
+    if (group.payload.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
     }
 
     if (!group.payload.tasks.some(x => x.id == taskId)){
@@ -496,6 +496,55 @@ var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
     }
 
     return { success : true, payload : "Task asigned" }
+}
+
+var tryCompleteTask = async function(userId, groupId, taskId){
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!taskId){
+        return { success : false, error : `Invalid taskId` };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id '${groupId}'` }
+    }
+
+    // check if user is a member of the group or the group owner
+    // We could make this so that only the assigned user can update a task.
+    if (group.payload.ownerId != userId && !group.payload.members.some(x => x.userId == userId)){
+        return { success : false, error : `Access denied to this group, only group members can update tasks` };
+    }
+
+    if (!group.payload.tasks.some(x => x.id == taskId)){
+        return { success : false, error : `Could not find task with id '${taskId}'` };
+    }
+
+    let updateFilter = { 
+        _id : dataService.toDbiD(groupId),
+        "tasks.id" : taskId
+    };
+    
+    let update = {
+        $set : { "tasks.$.status": 2, "tasks.$.completedBy": userId, "tasks.$.completedAt": new Date() }
+    }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to update task, please try again later" };
+    }
+
+    return { success : true, payload : "Task updated" }
 }
 
 /** onvert the stored time number to string and apply the timezone
@@ -704,3 +753,4 @@ module.exports.tryApproveUserRequest = tryApproveUserRequest;
 module.exports.tryKickUser = tryKickUser;
 module.exports.tryCreateTask = tryCreateTask;
 module.exports.tryAssignTask = tryAssignTask;
+module.exports.tryCompleteTask = tryCompleteTask;

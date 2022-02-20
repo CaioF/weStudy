@@ -29,7 +29,8 @@
     "mongodb": "^4.3.1",
     "passport": "^0.5.2",
     "passport-google-token": "^0.1.2",
-    "we-study": "file:.."
+    "we-study": "file:..",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

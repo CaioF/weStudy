@@ -32,7 +32,7 @@ router.get("/:groupId", async function (req, res) {
 /** Create a new group */
 router.post("/", async function (req, res) {
 
-    const result = await dataService.createNewGroup(req.session.userId, req.body); 
+    const result = await dataService.tryCreateNewGroup(req.session.userId, req.body); 
     if (result.success){
         res.json(result.payload);
     }
@@ -100,5 +100,20 @@ router.post("/:groupId/kick/:requestUserId", async function (req, res) {
         res.status(400).json(result.error);
     }    
 });
+
+
+/** Create a new task */
+router.post("/:groupId/tasks", async function (req, res) {
+
+    const result = await dataService.tryCreateTask(req.session.userId, req.params.groupId, req.body); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
+
 
 module.exports = router;

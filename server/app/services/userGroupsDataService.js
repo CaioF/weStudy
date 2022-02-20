@@ -3,6 +3,7 @@ const collectionName = "user.groups";
 const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
 const utility = require("../utility");
+const uuid = require('uuid');
 
 var tryGetUserGroups = async function(userId) {
     
@@ -84,7 +85,7 @@ var tryGetGroup = async function(userId, groupId) {
 };
 
 /** create a new group using the supplied payload  */  
-var createNewGroup = async function(userId, group) {
+var tryCreateNewGroup = async function(userId, group) {
     
     // validate input    
     var errors = validateGroup(group, userId);
@@ -110,6 +111,7 @@ var createNewGroup = async function(userId, group) {
             timeZone : group.timeZone,
             timeRanges : times,
             members : [],
+            tasks : [],
             dateCreated: new Date(),
             dateUpdated: new Date() }
     }
@@ -147,8 +149,8 @@ var tryUpdateGroup = async function(userId, groupId, group) {
             subject: group.subject, 
             size : group.size,
             timeZone : group.timeZone,
-            timeRanges : group.timeRanges,
-            members : [],
+            timeRanges : group.timeRanges,            
+            //members :group.members,
             dateUpdated: new Date() }
      }
 
@@ -335,7 +337,7 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
  * To kick/remove a user we need to remove the record from 
  * the memebers array
  **/
- var tryKickUser = async function(userId, groupId, requestUserId) {
+var tryKickUser = async function(userId, groupId, requestUserId) {
     // validate input
     if (!userId){
         return { success : false, error : `Invalid userId` };
@@ -381,6 +383,60 @@ var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
     }
 
      return { success : true };
+}
+
+/** Create a new task
+ * Task.Status :    0 = not assigned
+ *                  1 = assigned
+ *                  2 = done
+ * 
+ */
+var tryCreateTask = async function(userId, groupId, task) {
+
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    let errors = validateTask(task);
+    if (errors.length > 0){
+        return { success : false, error : errors };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+
+    if (group.payload.tasks.includes(x => x.name == task.name)){
+        return { success : false, error : `Task already exists` };
+    }
+  
+    // update the group atomically
+    // status : 0 = not assigned
+    const update = {         
+        $push : { tasks : { 
+            id : uuid.v1(),  
+            name : task.name,            
+            status : 0, 
+            description : task.description,
+            createdBy : userId,
+            dateCreated : new Date(),  } }
+    };
+
+    const updateFilter = { 
+        "_id" : dataService.toDbiD(groupId),       
+        tasks : { $not: { $elemMatch : { name : task.name }}}
+    };
+
+    let groupJoin = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!groupJoin.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : `Unable to add task to group, please try again.` }; 
+    }
+
+    return  { success : true };
 }
 
 /** onvert the stored time number to string and apply the timezone
@@ -445,6 +501,7 @@ function convertDetailedDocument(doc, userId){
     let converted = convertDocument(doc);
     converted["isOwner"] = userId == doc.ownerId;
     converted["members"] = doc.members;
+    converted["tasks"] = doc.tasks;
 
     return converted;
 }
@@ -560,8 +617,25 @@ function validateSearchRequest(request){
     return errors;
 }
 
+function validateTask(task){
+    var errors = [];
+    if (!task){
+        errors.push("Invalid task");
+    }
+
+    if (!task.name){
+        errors.push("Invalid name");
+    }   
+
+    if (!task.description){
+        errors.push("Invalid description");
+    }   
+
+    return errors;
+}
+
 module.exports.tryGetUserGroups = tryGetUserGroups;
-module.exports.createNewGroup = createNewGroup;
+module.exports.tryCreateNewGroup = tryCreateNewGroup;
 module.exports.tryUpdateGroup = tryUpdateGroup;
 module.exports.deleteGroup = deleteGroup;
 module.exports.searchGroup = searchGroup;
@@ -569,3 +643,4 @@ module.exports.tryRequestJoin = tryRequestJoin;
 module.exports.tryGetGroup = tryGetGroup;
 module.exports.tryApproveUserRequest = tryApproveUserRequest;
 module.exports.tryKickUser = tryKickUser;
+module.exports.tryCreateTask = tryCreateTask;

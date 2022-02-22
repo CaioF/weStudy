@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "install:server": "npm install --prefix server",
-    "install:web": "npm install --prefix web",
+    "install:server": "npm ci --prefix server",
+    "install:web": "npm ci --prefix web",
     "install": "npm run install:server && npm run install:web",
     "web:dev": "npm start --prefix web",
     "web:build": "npm run build --prefix web",

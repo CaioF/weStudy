@@ -4,16 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "install:server": "npm ci --prefix server",
-    "install:web": "npm ci --prefix web",
-    "install": "npm run install:server && npm run install:web",
+    "install_x:server": "npm ci --prefix server",
+    "install_x:web": "npm ci --prefix web",
+    "install_x": "npm run install:server && npm run install:web",
     "web:dev": "npm start --prefix web",
     "web:build": "npm run build --prefix web",
     "server:dev": "npm run dev --prefix server",
     "server:start": "npm run web:build && npm run start --prefix server",
     "dev": "npm run server:dev & npm run web:dev",
     
-    "build": "npm run install && npm run build --prefix web",
+    "build": "npm ci --prefix server && npm ci --prefix web && npm run build --prefix web",
     "start": "node ./server/server.js"
   },
   "repository": {

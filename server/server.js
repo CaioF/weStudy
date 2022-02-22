@@ -12,7 +12,7 @@ const root = path.normalize(__dirname + '/..');
 dotenv.config();
 const app = express()
 const port = process.env.PORT; // heroku adds PORT -->
-const webRoot = root + '/web/public'; //path.join(root, '..', 'web', 'public');
+const webRoot = path.join(root, 'web', 'build');
 
 // initialize app (our server)
 app.use(cors({

@@ -4,16 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "install:server": "npm install --prefix server",
-    "install:web": "npm install --prefix web",
-    "install": "npm run install:server && npm run install:web",
+    "install:server": "npm ci --prefix server",
+    "install:web": "npm ci --prefix web",
     "web:dev": "npm start --prefix web",
-    "web:build": "npm run build --prefix web",
     "server:dev": "npm run dev --prefix server",
     "server:start": "npm run web:build && npm run start --prefix server",
     "dev": "npm run server:dev & npm run web:dev",
-    "build": "npm run install",
-    "start": "node ./server/server.js"
+    "build": "npm ci --prefix server && npm ci --prefix web && npm run build --prefix web",
+    "start": "npm run start --prefix server"
   },
   "repository": {
     "type": "git",
@@ -27,6 +25,5 @@
   },
   "homepage": "https://github.com/Codendaal1120/Uol-Agile-cm2020#readme",
   "dependencies": {
-   
   }
 }

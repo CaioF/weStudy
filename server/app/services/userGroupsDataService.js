@@ -181,6 +181,14 @@ var tryUpdateGroup = async function(userId, groupId, group) {
     if (!existingGroup.success){
         return { success : false, error : existingGroup.error };
     }
+
+    var times = [];
+
+    group.timeRanges.forEach(tz => {
+        let utcStart = convertToUtcInt(tz.startTime, group.timeZone);
+        let utcEnd = convertToUtcInt(tz.endTime, group.timeZone);
+        times.push({ day : tz.day, utcStartTime : utcStart, utcEndTime : utcEnd });
+    });  
  
     const update = { 
         $set : { 
@@ -190,7 +198,7 @@ var tryUpdateGroup = async function(userId, groupId, group) {
             subject: group.subject, 
             size : group.size,
             timeZone : group.timeZone,
-            timeRanges : group.timeRanges,            
+            timeRanges : times,            
             //members :group.members,
             dateUpdated: new Date() }
      }
@@ -214,7 +222,7 @@ var deleteGroup = async function(userId, groupId) {
  
     return { success : true, payload : "Group deleted" };}
 
-/** search for a group  */    
+/** search for a group, times should be utc times  */    
 var searchGroup = async function(searchRequest) {
     
     // first validate input    
@@ -241,8 +249,8 @@ var searchGroup = async function(searchRequest) {
     let filter = { 
         "timeRanges" : {  $elemMatch: {
             "day" : searchRequest.day, 
-            "startTime" : { $lte : searchRequest.startTime },
-            "endTime" : { $gte : searchRequest.endTime },
+            "utcStartTime" : { $lte : searchRequest.startTime },
+            "utcEndTime" : { $gte : searchRequest.endTime },
         }},
         "spots" : {  $gte : 1 },
         'subject': {'$regex':  searchRequest.subject, '$options' : 'i'},
@@ -257,7 +265,7 @@ var searchGroup = async function(searchRequest) {
         convertedGroups.push(convertDocument(g));        
     }); 
 
-    return convertedGroups;
+    return { success : true, payload : convertedGroups };
 }
 
 /** Try to create a join request.
@@ -728,6 +736,11 @@ function convertToUtcInt(timeinput, timeZone){
     */
     let offSet = momentTZ().tz(timeZone).format('ZZ');
 
+    // input is expected in the format HH:mm
+    if (timeinput.length < 5){
+        timeinput = `0${timeinput}`;
+    }
+
     // The date here is irrelevant as we only need the time
     let utc = momentTZ.utc(`2000-01-01 ${timeinput}${offSet}`);
     let hm = utc.format("HHmm");
@@ -775,24 +788,36 @@ function validateGroup(group, userId){
             }
 
             // convert and check start time
-            var start = parseInt(group.timeRanges[i].startTime.replace(":", ""));
-            if (!start){
-                errors.push("Invalid startTime in timeRange element " + i);
+            var start  = group.timeRanges[i].startTime;
+            if (Number.isInteger(start)){
+                errors.push("startTime cannot be a number");
             }
+            else{
+                start = parseInt(group.timeRanges[i].startTime.replace(":", ""));  
+                if (!start){
+                    errors.push("Invalid startTime in timeRange element " + i);
+                }             
 
-            if (start < 0 || start > 2359){
-                errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            }
+                if (start < 0 || start > 2359){
+                    errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
+                }
+            }     
 
             // convert and check end time
-            var end = parseInt(group.timeRanges[i].endTime.replace(":", ""));
-            if (!end){
-                errors.push("Invalid endTime in timeRange element " + i);
+            var end = group.timeRanges[i].endTime;
+            if (Number.isInteger(end)){
+                errors.push("startTime cannot be a number");
+                if (!end){
+                    errors.push("Invalid endTime in timeRange element " + i);
+                }
+    
+                if (end < 0 || end > 2359){
+                    errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
+                }
             }
-
-            if (end < 0 || end > 2359){
-                errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            }
+            else{
+                end = parseInt(group.timeRanges[i].endTime.replace(":", ""));
+            }                   
 
             if (start > end){
                 errors.push("Invalid endTime in timeRange element " + i + ", endtime has to be greater than startTime");

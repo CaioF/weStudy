@@ -41,7 +41,6 @@ router.get("/:groupId/link", async function (req, res) {
     }    
 });
 
-
 /** Create a new group */
 router.post("/", async function (req, res) {
 

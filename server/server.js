@@ -33,49 +33,36 @@ app.use(sessions({
 
 app.use(bodyParser.json());
 
-// set up websocket
-// io.on('event.here', async (data) => {
-  
-//   socket.on('message', async (msg) => {
-
-//     await chatService.processMessage(msg, io);
-
-//     // console.log("Received a chat message");
-//     // io.emit('chat message', msg);
-//   });
-
-// });
-
-
-io.on('connection', function(socket) {
- 
+// set up chat service
+io.on('connection', function(socket) { 
   socket.on('message', async (msg) => {
-
     await chatService.processMessage(msg, io);
-
   });
 })
-
-// io.on('connection', function(socket) {
- 
-//   socket.on('message', function(msg) {
-
-//     chatService.processMessage(msg, io);
-
-//     // console.log("Received a chat message");
-//     // io.emit('chat message', msg);
-//   });
-// })
 
 // Api auth middleware
 app.use('/api', async (req, res, next) => {
 
-  const authHeader = req.headers["authorization"].replace("Bearer ", '');
+  // if this is set to 'test' we will be connecting to a mock db and we cannot verify users,
+  // therefore we mock the user
+  if (process.env.NODE_ENV === 'test') {
+    var ses = req.session;
+    ses.userId = req.headers["test_user"] ;
+    if (!ses.userId){
+      ses.userId = "UNIT_TEST";
+    }    
+    next();
+    return;
+  }
+
+  let authHeader = req.headers["authorization"]  
+  
   if (!authHeader){
     res.status(401).send("No auth header");
     return;
   }
-
+  
+  authHeader = authHeader.replace("Bearer ", ''); 
   authService.tryVerifyJwt(authHeader, function(result){
 
     if (!result.success){
@@ -103,7 +90,7 @@ app.use("/api/meta", require("./app/controllers/meta"));
 app.use("/api/chat", require("./app/controllers/chat"));
 
 // set static folder
-//app.use(express.static(webRoot));
+app.use(express.static(webRoot));
 
 // react-router will take care of spa routing 
 app.get('/', (req, res) => {
@@ -115,3 +102,4 @@ http.listen(port, () => {
   console.log(`weStudy listening at http://localhost:${port}`)
 })
 
+module.exports = app;

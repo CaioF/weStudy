@@ -9,9 +9,11 @@
     "web:dev": "npm start --prefix web",
     "server:dev": "npm run dev --prefix server",
     "server:start": "npm run web:build && npm run start --prefix server",
-    "dev": "npm run server:dev & npm run web:dev",
+    "dev": "npm ci --prefix server && npm ci --prefix web && npm run build --prefix web",
+    "debug": "npm install --prefix server && npm install --prefix web && npm run build --prefix web && npm run start --prefix server",
     "build": "npm ci --prefix server && npm ci --prefix web && npm run build --prefix web",
-    "start": "npm run start --prefix server"
+    "start": "npm run start --prefix server",
+    "debug2" : "npm run start --prefix server"
   },
   "repository": {
     "type": "git",

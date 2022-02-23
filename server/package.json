@@ -29,6 +29,8 @@
     "mongodb": "^4.3.1",
     "passport": "^0.5.2",
     "passport-google-token": "^0.1.2",
+    "socket.io": "^4.4.1",
+    "uuid": "^8.3.2",
     "we-study": "file:.."
   },
   "devDependencies": {

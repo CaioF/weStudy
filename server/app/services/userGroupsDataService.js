@@ -712,6 +712,7 @@ function convertDetailedDocument(doc, userId){
     converted["isOwner"] = userId == doc.ownerId;
     converted["members"] = doc.members;
     converted["tasks"] = doc.tasks;
+    converted["chatId"] = doc.chatId;
 
     return converted;
 }

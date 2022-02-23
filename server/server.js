@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const dotenv = require('dotenv');
 const sessions = require('express-session')
 const authService = require("./app/services/authService");
+const chatService = require("./app/services/chatService");
 const path = require('path');
 const root = path.normalize(__dirname + '/..');
 
@@ -13,6 +14,8 @@ dotenv.config();
 const app = express()
 const port = process.env.PORT; // heroku adds PORT -->
 const webRoot = path.join(root, 'web', 'build');
+const http = require('http').createServer(app);
+const io = require('socket.io')(http);
 
 // initialize app (our server)
 app.use(cors({
@@ -29,6 +32,40 @@ app.use(sessions({
 }))
 
 app.use(bodyParser.json());
+
+// set up websocket
+// io.on('event.here', async (data) => {
+  
+//   socket.on('message', async (msg) => {
+
+//     await chatService.processMessage(msg, io);
+
+//     // console.log("Received a chat message");
+//     // io.emit('chat message', msg);
+//   });
+
+// });
+
+
+io.on('connection', function(socket) {
+ 
+  socket.on('message', async (msg) => {
+
+    await chatService.processMessage(msg, io);
+
+  });
+})
+
+// io.on('connection', function(socket) {
+ 
+//   socket.on('message', function(msg) {
+
+//     chatService.processMessage(msg, io);
+
+//     // console.log("Received a chat message");
+//     // io.emit('chat message', msg);
+//   });
+// })
 
 // Api auth middleware
 app.use('/api', async (req, res, next) => {
@@ -63,16 +100,18 @@ app.use("/api/users", require("./app/controllers/users"));
 app.use("/api/userGroups", require("./app/controllers/userGroups"));
 app.use("/secure", require("./app/controllers/auth"));
 app.use("/api/meta", require("./app/controllers/meta"));
+app.use("/api/chat", require("./app/controllers/chat"));
 
 // set static folder
-app.use(express.static(webRoot));
+//app.use(express.static(webRoot));
 
 // react-router will take care of spa routing 
-app.get('/*', (req, res) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(webRoot, 'index.html'))
 })
 
 // Start webserver and listen for connections
-app.listen(port, () => {  
+http.listen(port, () => {  
   console.log(`weStudy listening at http://localhost:${port}`)
 })
+

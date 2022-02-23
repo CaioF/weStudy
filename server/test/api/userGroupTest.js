@@ -7,6 +7,9 @@ const { doesNotMatch } = require('assert');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const req = require('express/lib/request');
 
+chai.use(require('chai-like'))
+chai.use(require('chai-things'))
+
 process.env.NODE_ENV = 'test'
 
 describe('Test /api/UserGroups', () => {
@@ -157,6 +160,20 @@ describe('Test /api/UserGroups/{groupId}/RequestJoin', () => {
         chai.expect(res.status).to.equal(200);
         chai.expect(res.body).to.not.equal(undefined);
     });
+
+    it('can approve join request', async () => {
+        chai.expect(testGroupId).to.not.equal(undefined);
+        const res = await chai.request(app).post(`/api/UserGroups/${testGroupId}/approve/UNIT_TEST_2`);
+        chai.expect(res.status).to.equal(200);
+        chai.expect(res.body).to.not.equal(undefined);
+    });
+
+    it('can kick a user', async () => {        
+        chai.expect(testGroupId).to.not.equal(undefined);
+        const res = await chai.request(app).post(`/api/UserGroups/${testGroupId}/kick/UNIT_TEST_2`);
+        chai.expect(res.status).to.equal(200);
+        chai.expect(res.body).to.not.equal(undefined);
+    });
 });
 
 describe('Test /api/UserGroups/find', () => {
@@ -185,6 +202,60 @@ describe('Test /api/UserGroups/find', () => {
         chai.expect(res.body).to.be.an('array');
         chai.expect(res.body).to.not.equal(undefined);
     });
+});
+
+describe('Test /api/UserGroups/{groupId}/tasks', () => {
+
+    let mongoServer;
+    let testGroupId;
+    let testTaskId;
+
+    before(async () => {
+        mongoServer = await createMongoServer();
+        testGroupId = await createTestRecord();
+    });
+    
+    after(async () => {
+        await mongoServer.stop();
+    });
+
+    it('can create a task', async () => {
+        chai.expect(testGroupId).to.not.equal(undefined);
+       
+        let req =  {
+            "name" : "test-task",
+            "description" : "I need to finish this api"
+        };
+
+        const res = await chai.request(app).post(`/api/UserGroups/${testGroupId}/tasks`).send(req);
+        chai.expect(res.status).to.equal(200);
+        
+        chai.expect(res.body).to.not.equal(undefined);
+        chai.expect(res.body.tasks).to.be.an('array');
+        chai.expect(res.body.tasks).to.contain.something.like(req);
+        testTaskId = res.body.tasks[0].id;
+    });
+
+    it('can assign a task', async () => {
+        chai.expect(testGroupId).to.not.equal(undefined);
+        chai.expect(testTaskId).to.not.equal(undefined);
+
+        const res = await chai.request(app).post(`/api/UserGroups/${testGroupId}/tasks/${testTaskId}/assign/UNIT_TEST_2`);
+        chai.expect(res.status).to.equal(200);
+        
+        chai.expect(res.body).to.not.equal(undefined);
+    });
+
+    it('can complete a task', async () => {
+        chai.expect(testGroupId).to.not.equal(undefined);
+        chai.expect(testTaskId).to.not.equal(undefined);
+       
+        const res = await chai.request(app).post(`/api/UserGroups/${testGroupId}/tasks/${testTaskId}/complete`);
+        chai.expect(res.status).to.equal(200);
+        
+        chai.expect(res.body).to.not.equal(undefined);
+    });
+ 
 });
 
 async function createMongoServer(){

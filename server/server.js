@@ -79,7 +79,7 @@ app.use('/api', async (req, res, next) => {
   }); 
 })
 
-// configure routes, bscially ulr paths that when called externally, 
+// configure routes, basically url paths that when called externally, 
 // will delegate control to the specified script in the routers folder
 app.get('/echo', async (req, res) => { 
   res.send("Welcome to weStudy");
@@ -93,8 +93,8 @@ app.use("/api/chat", require("./app/controllers/chat"));
 // set static folder
 app.use(express.static(webRoot));
 
-// react-router will take care of spa routing 
-app.get('/', (req, res) => {
+// '/*' ---> react-router will take care of spa routing 
+app.get('/*', (req, res) => {
   res.sendFile(path.join(webRoot, 'index.html'))
 })
 

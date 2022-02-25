@@ -17,11 +17,12 @@ const webRoot = path.join(root, 'web', 'build');
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
+// TODO: remove '*' from allowedHeaders after fixing cors problem
 // initialize app (our server)
 app.use(cors({
   origin : process.env.ORIGIN, 
   credentials: true, 
-  allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie'
+  allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie, *'
 }));
 
 app.use(sessions({

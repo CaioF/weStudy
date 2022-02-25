@@ -3,4 +3,5 @@
 .env
 /server/node_modules
 /web/node_modules
+/web/build
 node_modules

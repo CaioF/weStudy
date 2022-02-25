@@ -1,4 +1,3 @@
-
 const mongo = require('mongodb');
 const MongoClient = mongo.MongoClient;
 
@@ -53,7 +52,8 @@ async function getManyAsync(collectionName, filter, project) {
     }
 }
 
-async function insertOneAsync(collectionName, document, project) {
+/** Read collection from db */
+async function getManyPaginatedAsync(collectionName, filter, project, page, itemsPerPage, sort) {
 
     var collection = await tryGetCollection(collectionName);
     if (!collection.success){
@@ -62,13 +62,48 @@ async function insertOneAsync(collectionName, document, project) {
 
     try {
 
-        if (!project){
-            project = {};
-        }  
+        if (!project){ project = {}; }  
+        if (!sort){ sort = {}; }  
+
+        let res = await collection.payload.find(filter, project)
+                                            .skip( page > 0 ? ( ( page - 1 ) * itemsPerPage ) : 0 )
+                                            .limit( itemsPerPage )
+                                            .sort(sort)
+                                            .toArray();
+        res.forEach(element => {
+            element = setObjectId(element)
+        });
+        return { success : true, payload : res };
+    } 
+    catch (err) {
+        return { success : false, error : err.message };
+    }
+}
+
+async function insertOneAsync(collectionName, document, project) {
+
+    if (!collectionName){
+        return { success : false, error : "invalid collectionName" };
+    }
+
+    if (!document){
+        return { success : false, error : "invalid document supplied" };
+    }
+
+    var collection = await tryGetCollection(collectionName);
+    if (!collection.success){
+        return collection;
+    }
+
+    if (!project){
+        project = {};
+    } 
+
+    try {
 
         let res = await collection.payload.insertOne(document);
-        if (res.insertedCount == 1){
-            return { success : true, payload : document };
+        if (res.insertedId){
+            return { success : true, payload : setObjectId(document) };
         }
         else{
             return { success : false, error : "Could not insert" };
@@ -194,8 +229,13 @@ async function deleteOneAsync(collectionName, filter) {
 }
 
 async function tryGetCollection(collectionName){
+
+    if (!collectionName){
+        return { success : false, error : "Invalid collection name" };
+    }
+
     // note to self, local connection was failing untill I changed the replicaSet host to the IP used in the connection
-    const client = await MongoClient.connect(process.env.dbConnection, { useNewUrlParser: true, useUnifiedTopology: true })
+    const client = await MongoClient.connect(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true })
         .catch(err => { return { success : false, error : err.message } });
 
     if (!client) {
@@ -222,7 +262,8 @@ var toDbiD = function(inputId) {
 
 module.exports.getOneAsync = getOneAsync;
 module.exports.getManyAsync = getManyAsync;
-// module.exports.insertOneAsync = insertOneAsync; // not final
+module.exports.getManyPaginatedAsync = getManyPaginatedAsync;
+module.exports.insertOneAsync = insertOneAsync; 
 module.exports.getOrCreateAsync = getOrCreateAsync;
 module.exports.updateOneAsync = updateOneAsync;
 module.exports.deleteOneAsync = deleteOneAsync;

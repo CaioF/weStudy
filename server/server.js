@@ -84,6 +84,8 @@ app.use('/api', async (req, res, next) => {
 app.get('/echo', async (req, res) => { 
   res.send("Welcome to weStudy");
 });
+
+
 app.use("/api/users", require("./app/controllers/users"));
 app.use("/api/userGroups", require("./app/controllers/userGroups"));
 app.use("/secure", require("./app/controllers/auth"));

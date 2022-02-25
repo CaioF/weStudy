@@ -1,8 +1,6 @@
 var dataService = require('./dataService');
 const collectionName = 'user.accounts';
 
-// for now we will just mock the data
-
 var tryGetUserByEmail = async function (userEmail) {
   // validate input
   if (!userEmail) {
@@ -30,17 +28,19 @@ var tryGetUserById = async function (userId) {
     return { success: false, error: 'Invalid email address' };
   }
 
-  // we need to lookup this user from the DB
-  var user = {
-    id: userId,
-    email: 'someEmail',
-    firstName: 'UserFirstName',
-    lastName: 'UserLastName',
-    dateCreated: '2022-01-29T18:25:43.511Z',
-  };
+  const result = await dataService.getOneAsync(collectionName, {
+    _id: dataService.toDbiD(userId),
+  });
+
+  if (!result.success && result.code == 'NOT_FOUND') {
+    return {
+      success: false,
+      error: "User with id '" + userId + "' not found",
+    };
+  }
 
   // return the user
-  return { success: true, payload: user };
+  return result;
 };
 
 async function tryGetOrCreateUser(userDetails) {
@@ -60,65 +60,102 @@ async function tryGetOrCreateUser(userDetails) {
   );
 }
 
-async function tryUpdateUser(userId, user) {
-  // validate input
-  if (!userId) {
-    return { success: false, error: 'Invalid userId' };
-  }
-  if (!user.email) {
-    return { success: false, error: 'Invalid email' };
-  }
-  if (!user.firstName) {
-    return { success: false, error: 'Invalid first name' };
-  }
-  if (!user.lastName) {
-    return { success: false, error: 'Invalid last name' };
-  }
+// async function tryUpdateUser(userId, user) {
+//   // validate input
+//   if (!userId) {
+//     return { success: false, error: 'Invalid userId' };
+//   }
+//   if (!user.email) {
+//     return { success: false, error: 'Invalid email' };
+//   }
+//   if (!user.firstName) {
+//     return { success: false, error: 'Invalid first name' };
+//   }
+//   if (!user.lastName) {
+//     return { success: false, error: 'Invalid last name' };
+//   }
 
-  let filter = { userId: userId, _id: dataService.toDbiD(userId) };
+//   let filter = { userId: userId, _id: dataService.toDbiD(userId) };
 
-  let existingUser = await dataService.getOneAsync(collectionName, filter);
-  if (!existingUser.success) {
-    return { success: false, error: existingUser.error };
-  }
-  const update = {
-    $setOnInsert: {
-      email: user.email,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      dateCreated: user.dateCreated,
-      dateUpdated: '2022-01-29T18:25:43.511Z',
-    },
-  };
+//   let existingUser = await dataService.getOneAsync(collectionName, filter);
+//   if (!existingUser.success) {
+//     return { success: false, error: existingUser.error };
+//   }
+//   const update = {
+//     $setOnInsert: {
+//       email: user.email,
+//       email: user.email,
+//       firstName: user.firstName,
+//       lastName: user.lastName,
+//       dateCreated: user.dateCreated,
+//       dateUpdated: '2022-01-29T18:25:43.511Z',
+//     },
+//   };
 
-  return await dataService.updateOneAsync(collectionName, filter, update);
-}
+//   return await dataService.updateOneAsync(collectionName, filter, update);
+// }
 
 var tryDeleteUser = async function (userId) {
   let filter = { userId: userId, _id: dataService.toDbiD(userId) };
-  let existingUser = await dataService.deleteOneAsync(collectionName, filter);
-  if (!existingUser.success) {
-    return { success: false, error: existingUser.error };
+  let deleteUser = await dataService.deleteOneAsync(collectionName, filter);
+  if (!deleteUser.success) {
+    return { success: false, error: deleteUser.error };
   }
 
   return { success: true };
 };
-var tryRateUser = async function (userId, user) {
-  let filter = { userId: userId, _id: dataService.toDbiD(userId) };
-  let existingUser = await dataService.deleteOneAsync(collectionName, filter);
-  if (!existingUser.success) {
-    return { success: false, error: existingUser.error };
+
+var tryRateUser = async function (userId, targetUserId, rating) {
+
+  if (!userId){
+    return { success : false, error : "Invalid userId" };
   }
+
+  if (!targetUserId){
+    return { success : false, error : "Invalid targetUserId" };
+  }
+
+  if (!rating){
+    return { success : false, error : "Invalid rating" };
+  }
+
+  rating = parseInt(rating);
+
+  if (!Number.isInteger(rating)){
+    return { success : false, error : "Invalid rating, only numbers are allowed" };
+  }
+
+  if (rating < 0 || rating > 5){
+    return { success : false, error : "Invalid rating, should be in the range 0-5" };
+  }
+
+  // confirm that the user exists 
+  let targetUser = await tryGetUserById(targetUserId);
+  if (!targetUser.success) {
+    return { success: false, error: targetUser.error };
+  }
+
+  let filter = { _id : dataService.toDbiD(targetUserId) };
+
+  const removeRating = {
+    $pull: {
+      'ratings': {
+          "userId": userId
+      }
+    }
+  };
+
+  var tryPull = await dataService.updateOneAsync(collectionName, filter, removeRating);
+  if (!tryPull.success){
+    return { success : false, error : tryPull.error };
+  }
+
   const update = {
-    $setOnInsert: {
-      email: user.email,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      rating: user.rating,
-      dateCreated: user.dateCreated,
-    },
+    $push : { ratings : { 
+      userId : userId,  
+      rating : rating,
+      dateCreated : new Date() 
+    }}
   };
 
   return await dataService.updateOneAsync(collectionName, filter, update);
@@ -127,6 +164,5 @@ var tryRateUser = async function (userId, user) {
 module.exports.tryGetUserByEmail = tryGetUserByEmail;
 module.exports.tryGetUserById = tryGetUserById;
 module.exports.tryGetOrCreateUser = tryGetOrCreateUser;
-module.exports.tryUpdateUser = tryUpdateUser;
 module.exports.tryDeleteUser = tryDeleteUser;
 module.exports.tryRateUser = tryRateUser;

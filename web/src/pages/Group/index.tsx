@@ -1,22 +1,50 @@
-// import { useParams } from 'react-router-dom';
-import { Text, Stack, Box, Flex } from '@chakra-ui/react';
-import { Participants } from '../../components/Participants';
-import { Button } from '../../components/Button';
-import { Circle } from '../../components/Circle';
-import { Tasks } from '../../components/Tasks';
-import { Chat } from '../../components/Chat';
-import { useModal } from '../../hooks';
-import { GroupForm } from '../../components/GroupForm';
-import { JoinRequests } from '../../components/JoinRequests';
-import { InvitationLink } from '../../components/InvitationLink';
+import { useParams } from "react-router-dom";
+import { Text, Stack, Box, Flex } from "@chakra-ui/react";
+import { Participants } from "../../components/Participants";
+import { Button } from "../../components/Button";
+import { Circle } from "../../components/Circle";
+import { Tasks } from "../../components/Tasks";
+import { Chat } from "../../components/Chat";
+import { useModal } from "../../hooks";
+import { GroupForm } from "../../components/GroupForm";
+import { JoinRequests } from "../../components/JoinRequests";
+import { InvitationLink } from "../../components/InvitationLink";
+import { useEffect, useState } from "react";
+import { api } from "../../services";
+
+export interface GroupData {
+  id: string;
+  name: string;
+  description: string;
+  topic: string;
+  groupSize: string;
+  timezone: string;
+}
 
 export function Group() {
+  const [group, setGroup] = useState<GroupData>({} as GroupData);
   const { openModal } = useModal();
+  const { groupId } = useParams();
+
+  useEffect(() => {
+    api.get(`/api/userGroups/${groupId}`).then(({ data }) => {
+      // TODO: topic/subject is not coming from the api
+      // TODO: timezone is buggy
+      setGroup({
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        topic: data.subject,
+        groupSize: String(data.size),
+        timezone: data.timeZone,
+      });
+    });
+  }, [groupId]);
 
   return (
     <Flex
-      height={{ base: 'auto', md: '80vh' }}
-      marginTop={{ base: '0', md: '-40px' }}
+      height={{ base: "auto", md: "80vh" }}
+      marginTop={{ base: "0", md: "-40px" }}
       width="100%"
       maxWidth="var(--maxWidth)"
       marginX="auto"
@@ -25,23 +53,25 @@ export function Group() {
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
       justify="space-evenly"
-      direction={{ base: 'column', md: 'row' }}
+      direction={{ base: "column", md: "row" }}
     >
       <Stack
         spacing="16px"
-        width={{ base: '100%', md: '"50%"' }}
-        marginRight={{ base: 0, md: '16px' }}
-        marginBottom={{ base: '16px', md: 0 }}
+        width={{ base: "100%", md: '"50%"' }}
+        marginRight={{ base: 0, md: "16px" }}
+        marginBottom={{ base: "16px", md: 0 }}
       >
         <Stack
-          direction={{ base: 'column', lg: 'row' }}
-          justify={{ base: 'center', lg: 'stretch' }}
+          direction={{ base: "column", lg: "row" }}
+          justify={{ base: "center", lg: "stretch" }}
           spacing="16px"
         >
           <Button
             flexGrow={1}
             flexShrink={0}
-            onClick={() => openModal(<GroupForm action="edit" />)}
+            onClick={() =>
+              openModal(<GroupForm action="edit" groupFormData={group} />)
+            }
           >
             Edit group
           </Button>
@@ -69,7 +99,7 @@ export function Group() {
         <Chat />
       </Stack>
 
-      <Box width={{ base: '100%', md: '"50%"' }}>
+      <Box width={{ base: "100%", md: '"50%"' }}>
         <Tasks />
       </Box>
     </Flex>

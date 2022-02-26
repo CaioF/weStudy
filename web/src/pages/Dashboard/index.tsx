@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { api } from "../../services/api";
 import { useModal } from "../../hooks";
 import { Flex, Divider } from "@chakra-ui/react";
-/* eslint-disable import/no-unresolved */
 import { Swiper, SwiperSlide } from "swiper/react"; // https://github.com/import-js/eslint-plugin-import/issues/2266
 import { Navigation } from "swiper";
 import Card from "../../components/Card";
-import { TimeSlider, Range, SelectForm } from "../../components/Form/";
+import { TimeSlider, SelectForm, Range } from "../../components/Form/";
 import { Button } from "../../components/Button";
 import { GroupForm } from "../../components/GroupForm";
 
@@ -22,6 +23,9 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/scrollbar";
+import { timezones } from "../../util/timezones";
+import { groupSizes } from "../../util/groupSizes";
+import { topics } from "../../util/topics";
 
 interface Group {
   id: string;
@@ -29,7 +33,6 @@ interface Group {
   description: string;
   members: number;
   dateCreated: Date;
-  // timeRange: Array<number>;
 }
 
 interface GroupResponse {
@@ -44,11 +47,52 @@ interface GroupResponse {
   timeZone: string;
 }
 
+const outerCarouselStyle = {
+  align: "center",
+  textAlign: "center" as const, // https://github.com/typestyle/typestyle/issues/281
+  justifyContent: "center",
+  justify: "space-between",
+};
+
 export function Dashboard() {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [timeRange, setTimeRange] = useState<Range>({ start: 9, end: 12 });
-  const [groupSize, setGroupSize] = useState<String>("1");
-  const [groupSubject, setGroupSubject] = useState<String>("Maths");
+  const [sessionTime, setSessionTime] = useState<Range>({ start: 8, end: 15 });
+
+  const formik = useFormik({
+    initialValues: {
+      topic: "",
+      groupSize: "",
+      timezone: "",
+    },
+    validationSchema: Yup.object({
+      topic: Yup.string().required("Required field"),
+      groupSize: Yup.string().required("Required field"),
+      timezone: Yup.string().required("Required field"),
+    }),
+    onSubmit: async (values) => {
+      const group = {
+        size: values.groupSize,
+        timeZone: values.timezone,
+        timeRanges: [
+          {
+            day: "Saturday",
+            startTime: String(sessionTime.start),
+            endTime: String(sessionTime.end),
+          },
+        ],
+        subject: values.topic,
+      };
+      try {
+        const response = await api.post("/api/userGroups", group);
+        if (response) {
+          // TODO: show success toast
+        }
+      } catch (err) {
+        // TODO: show error toast
+      }
+    },
+  });
+
   const { openModal } = useModal();
 
   useEffect(() => {
@@ -65,29 +109,6 @@ export function Dashboard() {
       setGroups(groups);
     });
   }, []);
-
-  useEffect(() => {
-    console.log(timeRange, groupSize, groupSubject);
-  }, [timeRange, groupSize, groupSubject]);
-
-  function onTimeChange(range: Range) {
-    setTimeRange(range);
-  }
-
-  function onGroupSizeChange(value: String) {
-    setGroupSize(value);
-  }
-
-  function onGroupSubjectChange(value: String) {
-    setGroupSubject(value);
-  }
-
-  const outerCarouselStyle = {
-    align: "center",
-    textAlign: "center" as const, // https://github.com/typestyle/typestyle/issues/281
-    justifyContent: "center",
-    justify: "space-between",
-  };
 
   return (
     <Flex
@@ -113,7 +134,6 @@ export function Dashboard() {
           Create Group
         </Button>
       </Flex>
-
       <div style={outerCarouselStyle}>
         <Swiper
           modules={[Navigation]}
@@ -140,25 +160,49 @@ export function Dashboard() {
           })}
         </Swiper>
       </div>
-
       <Divider />
       {/* TODO: add styles */}
       <Flex bgColor="gray.300 !important">
-        <TimeSlider label="Session time" onChange={onTimeChange} />
         <SelectForm
+          id="topic"
           label="Topic"
-          placeholder="Select"
-          options={["Maths", "Biology", "Bananas"]}
-          onChange={onGroupSubjectChange}
+          placeholder="select"
+          options={topics}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.topic}
+          errorMessage={formik.errors.topic}
         />
+
         <SelectForm
-          label="Group Size"
-          placeholder="Select"
-          options={["1", "2", "3", "4", "5"]}
-          onChange={onGroupSizeChange}
+          id="groupSize"
+          label="Group size"
+          placeholder="select"
+          options={groupSizes}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.groupSize}
+          errorMessage={formik.errors.groupSize}
+        />
+
+        <SelectForm
+          id="timezone"
+          label="Timezone"
+          placeholder="select"
+          options={timezones}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          value={formik.values.timezone}
+          errorMessage={formik.errors.timezone}
+        />
+
+        <TimeSlider
+          label="Session time"
+          onChange={setSessionTime}
+          start={sessionTime.start}
+          end={sessionTime.end}
         />
       </Flex>
-
       <div>
         <Swiper
           modules={[Navigation]}

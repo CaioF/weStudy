@@ -1,11 +1,9 @@
-import { useState, useEffect } from "react";
 import {
   RangeSlider,
   RangeSliderTrack,
   RangeSliderFilledTrack,
   RangeSliderThumb,
   Text,
-  Box,
   Flex,
 } from "@chakra-ui/react";
 
@@ -16,23 +14,19 @@ export type Range = {
 
 interface TimeSliderProps {
   label: string;
+  start: number;
+  end: number;
   onChange(range: Range): void;
 }
 
-export function TimeSlider({ label, onChange }: TimeSliderProps) {
-  const [range, setRange] = useState<Range>({ start: 9, end: 12 });
-
-  useEffect(() => {
-    onChange(range);
-  }, [range, onChange]);
-
+export function TimeSlider({ label, start, end, onChange }: TimeSliderProps) {
   return (
     <Flex direction="column" width="100%">
       <Text color="blue.900" pb="4px" fontSize="16px">
         {label}
       </Text>
       <RangeSlider
-        onChangeEnd={(val) => setRange({ start: val[0], end: val[1] })}
+        onChangeEnd={(val) => onChange({ start: val[0], end: val[1] })}
         defaultValue={[9, 12]}
         min={0}
         max={24}
@@ -44,13 +38,13 @@ export function TimeSlider({ label, onChange }: TimeSliderProps) {
 
         <RangeSliderThumb boxSize={6} index={0}>
           <Text fontSize="12px" color="blue.900">
-            {range.start}
+            {start}
           </Text>
         </RangeSliderThumb>
 
         <RangeSliderThumb boxSize={6} index={1}>
           <Text fontSize="12px" color="blue.900">
-            {range.end}
+            {end}
           </Text>
         </RangeSliderThumb>
       </RangeSlider>

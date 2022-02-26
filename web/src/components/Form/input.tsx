@@ -1,24 +1,41 @@
-import { ChangeEvent } from 'react';
-import { Flex, Text, Input as ChackraInput } from "@chakra-ui/react";
+import {
+  Flex,
+  Text,
+  Input as ChackraInput,
+  InputProps as ChackraInputProps,
+} from "@chakra-ui/react";
 
-interface InputProps {
+type InputProps = {
   label: string;
   placeholder: string;
   value: string;
-  onChange(value: string): void;
-}
+  errorMessage?: string;
+} & ChackraInputProps;
 
-export function Input({ label, placeholder, value, onChange }: InputProps) {
+export function Input({
+  label,
+  placeholder,
+  value,
+  errorMessage,
+  ...rest
+}: InputProps) {
   return (
     <Flex direction="column" width="100%">
-      <Text color="blue.900" pb="4px" fontSize="16px">{label}</Text>
-      <ChackraInput 
+      <Text color="blue.900" pb="4px" fontSize="16px">
+        {label}
+      </Text>
+      <ChackraInput
+        {...rest}
         placeholder={placeholder}
         value={value}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
         width="100%"
       />
+      {errorMessage && (
+        <Text my="4px" fontSize="12px" color="red">
+          {errorMessage}
+        </Text>
+      )}
     </Flex>
   );
 }

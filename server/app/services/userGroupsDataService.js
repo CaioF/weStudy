@@ -3,6 +3,7 @@ const collectionName = "user.groups";
 const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
 const utility = require("../utility");
+const uuid = require('uuid');
 
 var tryGetUserGroups = async function(userId) {
     
@@ -23,6 +24,7 @@ var tryGetUserGroups = async function(userId) {
         dateUpdated: 1
     };
 
+    // status : 1 = approved
     let groups = await dataService.getManyAsync(collectionName, { $or : [ 
         { ownerId : userId },
         { members : { $elemMatch : { userId : userId, status : 1 } } }
@@ -37,7 +39,9 @@ var tryGetUserGroups = async function(userId) {
     return { success : true, payload : convertedGroups };
 };
 
-/** Get a specific group if you are an approved member or the owner */
+/** Get a specific group if you are an approved member or the owner.
+ * This includes the group details like members and tasks
+ */
 var tryGetGroup = async function(userId, groupId) {
     
     // validate input
@@ -53,6 +57,7 @@ var tryGetGroup = async function(userId, groupId) {
         _id : 1,
         ownerId : 1, 
         name: 1, 
+        description : 1,
         size : 1,
         spots : 1,
         timeZone : 1,
@@ -68,8 +73,8 @@ var tryGetGroup = async function(userId, groupId) {
     }
 
     // The user cannot access the group if he is not an apporved memeber or the group owner
-    if (group.payload.members.filter(x => x.userId == userId && x.status == 1).length > 0 || group.ownerId == userId){
-        let convertedGroup = convertDetailedDocument(group.payload);
+    if (group.payload.members.filter(x => x.userId == userId && x.status == 1).length > 0 || group.payload.ownerId == userId){
+        let convertedGroup = convertDetailedDocument(group.payload, userId);
 
         // return the group
         return { success : true, payload : convertedGroup };
@@ -79,7 +84,49 @@ var tryGetGroup = async function(userId, groupId) {
     
 };
 
-var createNewGroup = async function(userId, group) {
+var tryGetGroupLink = async function(userId, groupId){
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }    
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName, { "_id" : dataService.toDbiD(groupId) } );
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+    
+    // Only members can request a link
+    if (!isUserGroupMember(group.payload, userId)){
+        return { success : false, error : `Access denied to this group, only group members can request a join link` };
+    }
+
+    // if the group exists and the user is a member, we can create a link and store it on the group
+    let linkId = generateId();
+    const update = {         
+        $push : { links : { 
+            id : linkId,  
+            createdBy : userId,
+            dateCreated : new Date() } }
+    };
+
+    const updateFilter = { "_id" : dataService.toDbiD(groupId)};
+
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : `Unable to generate join link, please try again.` }; 
+    }
+
+    return { success : true, payload : `${process.env.ORIGIN}/api/userGroups/${groupId}/joinWithlink/${linkId}` }
+}
+
+/** create a new group using the supplied payload  */  
+var tryCreateNewGroup = async function(userId, group) {
     
     // validate input    
     var errors = validateGroup(group, userId);
@@ -99,11 +146,13 @@ var createNewGroup = async function(userId, group) {
         $setOnInsert : { 
             ownerId: userId, 
             name: group.name, 
+            description : group.description,
             size : group.size,
             spots : group.size,
             timeZone : group.timeZone,
             timeRanges : times,
             members : [],
+            tasks : [],
             dateCreated: new Date(),
             dateUpdated: new Date() }
     }
@@ -116,6 +165,7 @@ var createNewGroup = async function(userId, group) {
     return { success : true, payload : convertDocument(document.payload) };
 };
 
+/** update a group, overwriting the existing group with the given payload  */  
 var tryUpdateGroup = async function(userId, groupId, group) {
 
     // first validate input    
@@ -131,16 +181,25 @@ var tryUpdateGroup = async function(userId, groupId, group) {
     if (!existingGroup.success){
         return { success : false, error : existingGroup.error };
     }
+
+    var times = [];
+
+    group.timeRanges.forEach(tz => {
+        let utcStart = convertToUtcInt(tz.startTime, group.timeZone);
+        let utcEnd = convertToUtcInt(tz.endTime, group.timeZone);
+        times.push({ day : tz.day, utcStartTime : utcStart, utcEndTime : utcEnd });
+    });  
  
     const update = { 
         $set : { 
             ownerId: userId, 
             name: group.name, 
+            description: group.description, 
             subject: group.subject, 
             size : group.size,
             timeZone : group.timeZone,
-            timeRanges : group.timeRanges,
-            members : [],
+            timeRanges : times,            
+            //members :group.members,
             dateUpdated: new Date() }
      }
 
@@ -152,16 +211,18 @@ var tryUpdateGroup = async function(userId, groupId, group) {
      return { success : true, payload : convertDocument(doc.payload) };
 }
 
+/** delete a group from the collection  */    
 var deleteGroup = async function(userId, groupId) { 
 
-    let filter = { "userId" : userId, "_id" : dataService.toDbiD(groupId) };
+    let filter = { "ownerId" : userId, "_id" : dataService.toDbiD(groupId) };
     let existingGroup = await dataService.deleteOneAsync(collectionName, filter);
     if (!existingGroup.success){
         return { success : false, error : existingGroup.error };
     }
  
-    return { success : true };}
+    return { success : true, payload : "Group deleted" };}
 
+/** search for a group, times should be utc times  */    
 var searchGroup = async function(searchRequest) {
     
     // first validate input    
@@ -188,8 +249,8 @@ var searchGroup = async function(searchRequest) {
     let filter = { 
         "timeRanges" : {  $elemMatch: {
             "day" : searchRequest.day, 
-            "startTime" : { $lte : searchRequest.startTime },
-            "endTime" : { $gte : searchRequest.endTime },
+            "utcStartTime" : { $lte : searchRequest.startTime },
+            "utcEndTime" : { $gte : searchRequest.endTime },
         }},
         "spots" : {  $gte : 1 },
         'subject': {'$regex':  searchRequest.subject, '$options' : 'i'},
@@ -204,11 +265,19 @@ var searchGroup = async function(searchRequest) {
         convertedGroups.push(convertDocument(g));        
     }); 
 
-    return convertedGroups;
+    return { success : true, payload : convertedGroups };
 }
 
+/** Try to create a join request.
+ * For this we will insert a new request in the memebers 
+ * array with a status of 0
+ * Join request status : 0 -> pending
+ *                       1 -> approved
+ *                       3 -> kicked
+*/
 var tryRequestJoin = async function(userId, groupId) {
 
+    // validate input
     if (!userId){
         return { success : false, error : `Invalid userId` };
     }
@@ -236,6 +305,7 @@ var tryRequestJoin = async function(userId, groupId) {
     }
 
     // update the group atomically
+    // status : 0 = pending
     const update = { 
         $inc : { spots : -1 },
         $push : { members : { userId : userId, dateRequested : new Date(), status : 0 } }
@@ -250,13 +320,344 @@ var tryRequestJoin = async function(userId, groupId) {
 
     let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
     if (!groupJoin.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
         return { success : false, error : `Unable to join group, please try again.` }; 
     }
 
-    return  { success : true };
+    return  { success : true, payload : "Join request submitted" };
 }
 
-/** Convert the stored time number to string and apply the timezone
+/** Try to approve a pending request. 
+ * To approve we need to change the existing request in the members 
+ * array to the status 1 (approved)
+ **/
+var tryApproveUserRequest = async function(userId, groupId, requestUserId) {
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!requestUserId){
+        return { success : false, error : `Invalid requestUserId` };
+    }
+
+    // find the group to check if its valid, we could have updated directly, 
+    // which will improve performance
+    // but we would not know why it fails, if it did
+    let filter = { "_id" : dataService.toDbiD(groupId), members : { $elemMatch : { userId : requestUserId } }  };   
+    let existingGroup = await dataService.getOneAsync(collectionName, filter);
+    if (!existingGroup.success){
+        return { success : false, error : existingGroup.error };
+    }
+
+    // Only the group owner can approve requests, again, 
+    // this could be done during the update
+    if (existingGroup.payload.ownerId != userId){
+        return { success : false, error : "Only the group owner can approve requests" };;
+    }
+
+    let updateFilter = { 
+        ownerId : userId, 
+        _id : dataService.toDbiD(groupId),
+        "members.userId" : requestUserId,
+        "members.status" : 0,
+        //members : { $elemMatch : { userId : requestUserId, status : 0 } } 
+    };
+    
+    let update = {
+        $set : { "members.$.status": 1, "members.$.dateJoined": new Date() }
+    }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to approve join request, please try again later" };
+    }
+
+    return { success : true, payload : "User join request approved" };
+}
+
+var tryJoinWithLink = async function(userId, groupId, linkId){
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!linkId){
+        return { success : false, error : `Invalid linkId` };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName, { "_id" : dataService.toDbiD(groupId) } );
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+
+    if (group.payload.ownerId == userId){
+        return { success : false, error : `Already joined to own group` };
+    }
+
+    if (group.payload.members.includes(x => x.userId == userId)){
+        return { success : false, error : `Already joined to this group` };
+    }
+
+    if (group.payload.spots < 1){
+        return { success : false, error : `Group is full` };
+    }
+
+    // update the group atomically
+    // status : 0 = pending
+    const update = { 
+        $inc : { spots : -1 },
+        $push : { members : { userId : userId, dateRequested : new Date(), status : 1, dateJoined : new Date() } },
+        $pull: { links: { id: linkId } }
+    };
+
+    const filter = { 
+        "_id" : dataService.toDbiD(groupId),
+        spots : { $gte : 1 },
+        ownerId : { $ne : userId },
+        "links.id" : linkId,
+        members : { $not: { $elemMatch : { userId : userId }}}
+    };
+
+    let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!groupJoin.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : `Unable to join group, please try again.` }; 
+    }
+
+    return  { success : true, payload : "Succsesfully join the group" };
+
+}
+
+/** Try to approve a pending request. 
+ * To kick/remove a user we need to remove the record from 
+ * the memebers array
+ **/
+var tryKickUser = async function(userId, groupId, requestUserId) {
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!requestUserId){
+        return { success : false, error : `Invalid requestUserId` };
+    }
+
+    // find the group to check if its valid, we could have updated directly, 
+    // which will improve performance
+    // but we would not know why it fails, if it did
+    let filter = { "_id" : dataService.toDbiD(groupId) };   
+    let existingGroup = await dataService.getOneAsync(collectionName, filter);
+    if (!existingGroup.success){
+        return { success : false, error : existingGroup.error };
+    }
+
+    // Only the group owner can remove users, again, 
+    // this can be done during the update
+    if (existingGroup.payload.ownerId != userId){
+        return { success : false, error : "Only the group owner can approve requests" };;
+    }
+
+    let updateFilter = { 
+        ownerId : userId, 
+        _id : dataService.toDbiD(groupId),
+        "members.userId" : requestUserId
+    };
+
+    let update = {
+        $pull: { members: { userId: requestUserId } }
+    }
+
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to remove user, please try again later" };
+    }
+
+     return { success : true, payload : " User kicked from group" };
+}
+
+/** Create a new task
+ * Task.Status :    0 = not assigned
+ *                  1 = assigned
+ *                  2 = done
+ * 
+ */
+var tryCreateTask = async function(userId, groupId, task) {
+
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    let errors = validateTask(task);
+    if (errors.length > 0){
+        return { success : false, error : errors };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id ${groupId}` }
+    }
+
+    if (group.payload.tasks.includes(x => x.name == task.name)){
+        return { success : false, error : `Task already exists` };
+    }
+  
+    if (!isUserGroupMember(group.payload, userId)){
+        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
+    }
+  
+    // update the group atomically
+    // status : 0 = not assigned
+    const update = {         
+        $push : { tasks : { 
+            id : generateId(),  
+            name : task.name,            
+            status : 0, 
+            description : task.description,
+            createdBy : userId,
+            dateCreated : new Date(),  } }
+    };
+
+    const updateFilter = { 
+        "_id" : dataService.toDbiD(groupId),       
+        tasks : { $not: { $elemMatch : { name : task.name }}}
+    };
+
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : `Unable to add task to group, please try again.` }; 
+    }
+
+    return updatedGroup;
+}
+
+/** Assign a task to a user, anyone in the group can do this */
+var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
+
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!taskId){
+        return { success : false, error : `Invalid taskId` };
+    }
+
+    if (!targetUserId){
+        return { success : false, error : `Invalid targetUserId` };
+    }    
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id '${groupId}'` }
+    }
+
+    // check if user is a member of the group or the group owner
+    if (!isUserGroupMember(group.payload, userId)){
+        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
+    }
+
+    if (!group.payload.tasks.some(x => x.id == taskId)){
+        return { success : false, error : `Could not find task with id '${taskId}'` };
+    }
+
+    let updateFilter = { 
+        _id : dataService.toDbiD(groupId),
+        "tasks.id" : taskId
+    };
+    
+    let update = {
+        $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() }
+    }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to assign task, please try again later" };
+    }
+
+    return { success : true, payload : "Task asigned" }
+}
+
+var tryCompleteTask = async function(userId, groupId, taskId){
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!taskId){
+        return { success : false, error : `Invalid taskId` };
+    }
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id '${groupId}'` }
+    }
+
+    // check if user is a member of the group or the group owner
+    // We could make this so that only the assigned user can update a task.
+    if (!isUserGroupMember(group.payload, userId)){
+        return { success : false, error : `Access denied to this group, only group members can update tasks` };
+    }
+
+    if (!group.payload.tasks.some(x => x.id == taskId)){
+        return { success : false, error : `Could not find task with id '${taskId}'` };
+    }
+
+    let updateFilter = { 
+        _id : dataService.toDbiD(groupId),
+        "tasks.id" : taskId
+    };
+    
+    let update = {
+        $set : { "tasks.$.status": 2, "tasks.$.completedBy": userId, "tasks.$.completedAt": new Date() }
+    }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to update task, please try again later" };
+    }
+
+    return { success : true, payload : "Task updated" }
+}
+
+function generateId(){
+    return uuid.v1().replace("-", "");
+}
+
+/** onvert the stored time number to string and apply the timezone
  * 150 --> 1:50
  * 1500 --> 15:00
  * 2315 --> 23:15
@@ -280,7 +681,9 @@ function convertToStringTime(timeinput, timeZone){
     return local;
 }
 
-/** We need to convert from the stored document to the api output */
+/** We need to convert from the stored document to the api output. 
+ * This means we need to convert the stored time numbers to a more friendly string format 
+ **/
 function convertDocument(doc){
 
     let times = [];
@@ -291,9 +694,11 @@ function convertDocument(doc){
         times.push({ day : tz.day, startTime : startTime, entTime : entTime });
     }); 
 
-    var returnObj = {
+    var returnObj = {        
+        id : doc.id,
         ownerId : doc.ownerId,
         name: doc.name, 
+        description: doc.description, 
         subject: doc.subject, 
         size : doc.size,
         availibleSpots : doc.spots,
@@ -306,12 +711,16 @@ function convertDocument(doc){
     return returnObj;
 }
 
-/** Similar to convertDocument, but the full payload */
+/** Similar to convertDocument, but the full payload, 
+ * which includes the isOwner flag, members in group, 
+ * and the tasks */
 function convertDetailedDocument(doc, userId){
 
     let converted = convertDocument(doc);
     converted["isOwner"] = userId == doc.ownerId;
     converted["members"] = doc.members;
+    converted["tasks"] = doc.tasks;
+    converted["chatId"] = doc.chatId;
 
     return converted;
 }
@@ -326,6 +735,11 @@ function convertToUtcInt(timeinput, timeZone){
         then create the moment object, which I can then convert to UTC
     */
     let offSet = momentTZ().tz(timeZone).format('ZZ');
+
+    // input is expected in the format HH:mm
+    if (timeinput.length < 5){
+        timeinput = `0${timeinput}`;
+    }
 
     // The date here is irrelevant as we only need the time
     let utc = momentTZ.utc(`2000-01-01 ${timeinput}${offSet}`);
@@ -363,7 +777,6 @@ function validateGroup(group, userId){
         errors.push("Invalid group timeZone specified, check the meta to get the correct timezone");
     }
 
-    //TODO:CO:: we need to specify the time/date
     if (!group.timeRanges){
         errors.push("Invalid group timeRanges specified");
     }
@@ -375,39 +788,40 @@ function validateGroup(group, userId){
             }
 
             // convert and check start time
-            var start = parseInt(group.timeRanges[i].startTime.replace(":", ""));
-            if (!start){
-                errors.push("Invalid startTime in timeRange element " + i);
+            var start  = group.timeRanges[i].startTime;
+            if (Number.isInteger(start)){
+                errors.push("startTime cannot be a number");
             }
+            else{
+                start = parseInt(group.timeRanges[i].startTime.replace(":", ""));  
+                if (!start){
+                    errors.push("Invalid startTime in timeRange element " + i);
+                }             
 
-            if (start < 0 || start > 2359){
-                errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            }
+                if (start < 0 || start > 2359){
+                    errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
+                }
+            }     
 
             // convert and check end time
-            var end = parseInt(group.timeRanges[i].endTime.replace(":", ""));
-            if (!end){
-                errors.push("Invalid endTime in timeRange element " + i);
+            var end = group.timeRanges[i].endTime;
+            if (Number.isInteger(end)){
+                errors.push("startTime cannot be a number");
+                if (!end){
+                    errors.push("Invalid endTime in timeRange element " + i);
+                }
+    
+                if (end < 0 || end > 2359){
+                    errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
+                }
             }
-
-            if (end < 0 || end > 2359){
-                errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            }
+            else{
+                end = parseInt(group.timeRanges[i].endTime.replace(":", ""));
+            }                   
 
             if (start > end){
                 errors.push("Invalid endTime in timeRange element " + i + ", endtime has to be greater than startTime");
             }
-
-            // group.timeRanges[i].convertedStartTime = convertTime(group.timeRanges[i].startTime);   
-            // if (group.timeRanges[i].convertedStartTime.timeNumber < 0 || group.timeRanges[i].convertedStartTime.timeNumber > 2359){
-            //     errors.push("Invalid startTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            // }
-
-            //  // convert and check end time
-            //  group.timeRanges[i].convertedEndTime = convertTime(group.timeRanges[i].endTime);
-            // if (group.timeRanges[i].convertedEndTime.timeNumber < 0 || group.timeRanges[i].convertedEndTime.timeNumber > 2359){
-            //     errors.push("Invalid endTime in timeRange element " + i + ". Times has to be in the range of 0 - 2359");
-            // }
         }
     }
 
@@ -439,10 +853,39 @@ function validateSearchRequest(request){
     return errors;
 }
 
+function validateTask(task){
+    var errors = [];
+    if (!task){
+        errors.push("Invalid task");
+    }
+
+    if (!task.name){
+        errors.push("Invalid name");
+    }   
+
+    if (!task.description){
+        errors.push("Invalid description");
+    }   
+
+    return errors;
+}
+
+/** check if user is a member of the group or the group owner */
+function isUserGroupMember(group, userId){
+    return group.ownerId == userId || group.members.some(x => x.userId == userId);
+}
+
 module.exports.tryGetUserGroups = tryGetUserGroups;
-module.exports.createNewGroup = createNewGroup;
+module.exports.tryCreateNewGroup = tryCreateNewGroup;
 module.exports.tryUpdateGroup = tryUpdateGroup;
 module.exports.deleteGroup = deleteGroup;
 module.exports.searchGroup = searchGroup;
 module.exports.tryRequestJoin = tryRequestJoin;
 module.exports.tryGetGroup = tryGetGroup;
+module.exports.tryApproveUserRequest = tryApproveUserRequest;
+module.exports.tryKickUser = tryKickUser;
+module.exports.tryCreateTask = tryCreateTask;
+module.exports.tryAssignTask = tryAssignTask;
+module.exports.tryCompleteTask = tryCompleteTask;
+module.exports.tryGetGroupLink = tryGetGroupLink;
+module.exports.tryJoinWithLink = tryJoinWithLink;

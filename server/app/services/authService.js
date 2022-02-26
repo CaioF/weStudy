@@ -4,12 +4,12 @@ const https = require('https');
 const dataService = require("./dataService");
 
 // initialize variables
-const client = new OAuth2Client(process.env.googleClientId)
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
 async function getUserDetailsFromIdToken(token) {
     const ticket = await client.verifyIdToken({
       idToken: token,
-      audience: process.env.googleClientId
+      audience: process.env.GOOGLE_CLIENT_ID
     });
     var userDetails = ticket.getPayload();
     return userDetails;
@@ -40,7 +40,7 @@ function tryGenerateJwt(user){
   }
 
   // cretae JWT token, using secret from config
-  const token = jwt.sign({ userId : user.id }, process.env.jwtSecret); 
+  const token = jwt.sign({ userId : user.id }, process.env.JWT_SECRET); 
 
   return { success : true, payload : token };
 }
@@ -50,7 +50,7 @@ function tryVerifyJwt(token, callback){
 
   // check expiry
 
-  jwt.verify(token, process.env.jwtSecret,  function(err, decoded)
+  jwt.verify(token, process.env.JWT_SECRET,  function(err, decoded)
   { 
     if (err){
       result = { success : false, error : err.message};

@@ -135,6 +135,32 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
     }
   }
 
+  async function handleDeleteGroup() {
+    try {
+      const response = await api.delete(`/api/userGroups/${groupFormData?.id}`);
+
+      showToast({
+        status: "success",
+        title: "Group Delete",
+        description: "Group was deleted successfully",
+      });
+      if (response) {
+      } else {
+        showToast({
+          status: "error",
+          title: "Group Delete",
+          description: "Could not delete group",
+        });
+      }
+    } catch (err) {
+      showToast({
+        status: "error",
+        title: "Group Delete",
+        description: "Could not delete group",
+      });
+    }
+  }
+
   return (
     <Flex direction="column" width="100%" justify="center" alignItems="center">
       <Text margin="16px 0 26px 0" fontSize="24px">
@@ -205,7 +231,9 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
             end={sessionTime.end}
           />
 
-          <Box pt="20px">
+          <Box pt="20px"></Box>
+
+          <Stack pt="20px" direction="row">
             <Button
               type="submit"
               disabled={formik.isSubmitting}
@@ -213,7 +241,16 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
             >
               {action === "create" ? "Create" : "Update"}
             </Button>
-          </Box>
+
+            <Button
+              bgColor="red"
+              disabled={formik.isSubmitting}
+              w={{ base: "100%", md: "fit-content" }}
+              onClick={handleDeleteGroup}
+            >
+              Delete
+            </Button>
+          </Stack>
         </Stack>
       </form>
     </Flex>

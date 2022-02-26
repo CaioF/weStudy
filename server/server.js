@@ -10,14 +10,13 @@ const path = require('path');
 const root = path.normalize(__dirname + '/..');
 
 // initialize variables
-dotenv.config();
+dotenv.config({ path: path.resolve(root, '.env') });
 const app = express()
 const port = process.env.PORT; // heroku adds PORT -->
 const webRoot = path.join(root, 'web', 'build');
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
-// TODO: remove '*' from allowedHeaders after fixing cors problem
 // initialize app (our server)
 app.use(cors({
   origin : process.env.ORIGIN, 

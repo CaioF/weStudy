@@ -1,5 +1,6 @@
 import { Flex, Stack, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
+import { useSwiperSlide } from 'swiper/react';
 import { Button } from '../Button';
 import { Circle } from '../Circle';
 import { Rating, Rate } from '../Rating';
@@ -40,7 +41,7 @@ function Participant({ name, rate }: ParticipantProps) {
   const [selectedRating, setSelectedRating] = useState<Rate>(0);
 
   useEffect(() => {
-    if (selectedRating != 0) {
+    if (selectedRating !== 0) {
       // @TODO: call api to rate participant
       console.log(`Selected rating: ${selectedRating}`);
     }

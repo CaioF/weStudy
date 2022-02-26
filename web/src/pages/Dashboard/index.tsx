@@ -1,76 +1,65 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { Flex } from '@chakra-ui/react';
 /* eslint-disable import/no-unresolved */
-import { Swiper, SwiperSlide } from 'swiper/react'; // https://github.com/import-js/eslint-plugin-import/issues/2266
+import { Swiper, SwiperSlide, useSwiperSlide } from 'swiper/react'; // https://github.com/import-js/eslint-plugin-import/issues/2266
 import { Navigation } from 'swiper';
 import Card from '../../components/Card';
+import { TimeSlider, Range } from '../../components/Form/';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
 
+interface Group {
+  id: string;
+  name: string;
+  description: string;
+  members: number;
+  dateCreated: Date;
+  // timeRange: Array<number>;
+}
+
+interface GroupResponse {
+  id: string;
+  name: string;
+  description: string;
+  members: number;
+  dateCreated: Date;
+  availibleSpots: number;
+  size: number;
+  timeRanges: [string, number, number];
+  timeZone: string;
+}
+
 export function Dashboard() {
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [timeRange, setTimeRange] = useState<Range>({ start: 9, end: 12 });
+
   useEffect(() => {
     api.get('/api/userGroups').then(res => {
-      console.log(res);
+      const groups = res.data.map((group: GroupResponse) => {
+        return {
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          members: group.size-(group.availibleSpots-1),
+          dateCreated: group.dateCreated,
+        }
+      })
+      setGroups(groups);
     });
+    
   }, []);
 
-  const dataList = [
-    // TODO: Replace this with backend call service
-    {
-      id: '1',
-      title: 'Group 1',
-      summary: 'This is a summary, can be any length',
-      date: '12/12/12',
-      tasks: '7',
-      participants: '7',
-    },
-    {
-      id: '2',
-      title: 'Group Two',
-      summary:
-        'Another summary, make sure that this is very responsivesfafsdfsdfsdfsdfsfsfsdf',
-      date: '12/12/12',
-      tasks: '7',
-      participants: '7',
-    },
-    {
-      id: '3',
-      title: 'Group Three',
-      summary: 'Finalize them summary, hurry, we are close to deadline',
-      date: '12/12/12',
-      tasks: '7',
-      participants: '7',
-    },
-    {
-      id: '4',
-      title: 'Group 4',
-      summary: 'This is a summary, can be any length',
-      date: '12/12/12',
-      tasks: '7',
-      participants: '7',
-    },
-    {
-      id: '5',
-      title: 'Group 5',
-      summary:
-        'Another summary, make sure that this is very responsivesfafsdfsdfsdfsdfsfsfsdf',
-      date: '12/12/12',
-      tasks: '7',
-      participants: '7',
-    },
-    {
-      id: '6',
-      title: 'Group 6',
-      summary: 'Finalize them summary, hurry, we are close to deadline',
-      date: '12/12/12',
-      tasks: '7',
-      participants: '7',
-    },
-  ];
+  useEffect(() => {
+    api.get('api/userGroups/find')
+  }, [timeRange]);
+
+  function onTimeChange(range: Range){
+    setTimeRange(range);
+  }
 
   const outerCarouselStyle = {
     align: 'center',
@@ -89,7 +78,7 @@ export function Dashboard() {
       bgColor="gray.300"
       filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
-      justifyContent="center"
+      justify="flex-start"
       flexDirection="column"
     >
       <div style={outerCarouselStyle}>
@@ -101,23 +90,29 @@ export function Dashboard() {
           // onSwiper={swiper => console.log(swiper)}
           // onSlideChange={() => console.log('slide change')}
         >
-          {dataList.map(function (data) {
-            const { id, title, summary, date, tasks, participants } = data;
+          {groups.map(function (data) {
+            const { id, name, description, dateCreated, members } = data;
             return (
               <SwiperSlide key={id}>
-                <Card
-                  title={title}
-                  summary={summary}
-                  date={date}
-                  tasks={tasks}
-                  participants={participants}
+                
+                  <Card
+                  id={id}
+                  title={name}
+                  summary={description}
+                  date={dateCreated}
+                  participants={members}
+                  isUserGroup={true}
                 />
+                
               </SwiperSlide>
             );
           })}
         </Swiper>
       </div>
+
       <div>
+        <TimeSlider onChange={onTimeChange}/>
+        
         <Swiper
           modules={[Navigation]}
           spaceBetween={50}
@@ -126,20 +121,26 @@ export function Dashboard() {
           // onSwiper={swiper => console.log(swiper)}
           // onSlideChange={() => console.log('slide change')}
         >
-          {dataList.map(function (data) {
-            const { id, title, summary, date, tasks, participants } = data;
+
+          {groups.map(function (data) {
+            const { id, name, description, dateCreated, members } = data;
             return (
               <SwiperSlide key={id}>
+
                 <Card
-                  title={title}
-                  summary={summary}
-                  date={date}
-                  tasks={tasks}
-                  participants={participants}
+                  id={id}
+                  title={name}
+                  summary={description}
+                  date={dateCreated}
+                  participants={members}
+                  isUserGroup={false}
                 />
+                
               </SwiperSlide>
             );
+
           })}
+
         </Swiper>
       </div>
     </Flex>

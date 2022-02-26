@@ -1,13 +1,21 @@
 import { Flex, Text, Button, Stack } from '@chakra-ui/react';
+import { useNavigate } from "react-router-dom";
+import { useSwiperSlide } from 'swiper/react';
+
+function formatDate(date: Date) {
+  return new Date(date).toLocaleDateString('en-GB');;
+}
 
 function Card(props: {
-  title: any;
-  summary: any;
-  date: any;
-  tasks: any;
-  participants: any;
+  id: string;
+  title: string;
+  summary: string;
+  date: Date;
+  participants: Number;
+  isUserGroup: boolean;
 }) {
-  const { title, summary, date, tasks, participants } = props;
+  const { id, title, summary, date, participants, isUserGroup } = props;
+  const navigate = useNavigate();
 
   return (
     <Flex
@@ -26,7 +34,7 @@ function Card(props: {
         justify="space-between"
         mt={{ base: 4, md: 0 }}
       >
-        <Flex bgColor="green.300" width="100%" justifyContent="center">
+        <Flex bgColor={isUserGroup ? "green.300" : "blue.300"} width="100%" justifyContent="center" p="8px">
           <Text
             fontWeight="bold"
             textTransform="uppercase"
@@ -38,44 +46,38 @@ function Card(props: {
           </Text>
         </Flex>
         <Text my={2}>{summary}</Text>
-        <Flex bgColor="green.300">
-          <Stack justify="space-between" width="100%">
-            <Flex width="20rem">
-              <Text
-                fontWeight="bold"
-                textTransform="uppercase"
-                fontSize="lg"
-                letterSpacing="wide"
-                color="white"
-              >
-                {date}
-              </Text>
-              <Text
-                fontWeight="bold"
-                textTransform="uppercase"
-                fontSize="lg"
-                letterSpacing="wide"
-                color="white"
-                flex="2"
-              >
-                {tasks}
-              </Text>
-              <Text
-                fontWeight="bold"
-                textTransform="uppercase"
-                fontSize="lg"
-                letterSpacing="wide"
-                color="white"
-                flex="1"
-              >
-                {participants}
-              </Text>
-            </Flex>
-            <Button alignSelf="center" display="block" width="10rem" my={2}>
-              Open group
-            </Button>
-          </Stack>
-        </Flex>
+        
+        <Flex bgColor={isUserGroup ? "green.300" : "blue.300"}>
+        
+            <Stack justify="space-between" width="100%" p="8px">
+              <Flex width="20rem">
+                <Text
+                  fontWeight="bold"
+                  textTransform="uppercase"
+                  fontSize="lg"
+                  letterSpacing="wide"
+                  color="white"
+                >
+                  {formatDate(date)}
+                </Text>
+                <Text
+                  fontWeight="bold"
+                  textTransform="uppercase"
+                  fontSize="lg"
+                  letterSpacing="wide"
+                  color="white"
+                  flex="1"
+                >
+                  {participants}
+                </Text>
+              </Flex>
+              <Button alignSelf="center" display="block" width="10rem" my={2} onClick={() => navigate(`/group/${id}`)}>
+                {isUserGroup ? "Open group" : "Join group"}
+              </Button>
+            </Stack>
+            
+      </Flex>
+       
       </Stack>
     </Flex>
   );

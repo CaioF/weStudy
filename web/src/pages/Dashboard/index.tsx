@@ -146,14 +146,14 @@ export function Dashboard() {
       <Flex bgColor="gray.300 !important">
         <TimeSlider label="Session time" onChange={onTimeChange} />
         <SelectForm
-          label="Subject"
-          placeholder="Maths"
+          label="Topic"
+          placeholder="Select"
           options={["Maths", "Biology", "Bananas"]}
           onChange={onGroupSubjectChange}
         />
         <SelectForm
           label="Group Size"
-          placeholder="1"
+          placeholder="Select"
           options={["1", "2", "3", "4", "5"]}
           onChange={onGroupSizeChange}
         />

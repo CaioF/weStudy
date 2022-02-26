@@ -4,7 +4,7 @@ interface SelectProps {
   label: string;
   placeholder: string;
   options: string[];
-  onChange(value: String): void;
+  onChange(value: string): void;
 }
 
 export function SelectForm({

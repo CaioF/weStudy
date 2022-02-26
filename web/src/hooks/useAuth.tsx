@@ -37,7 +37,11 @@ const AuthProvider: React.FC = ({ children }) => {
 
     if (token && user) {
       api.defaults.headers.common.authorization = token;
-      return { token, user: JSON.parse(user) };
+      try {
+        return { token, user: JSON.parse(user) };
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     return {} as AuthState;

@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { api } from '../../services/api';
 import { Flex } from '@chakra-ui/react';
 /* eslint-disable import/no-unresolved */
 import { Swiper, SwiperSlide } from 'swiper/react'; // https://github.com/import-js/eslint-plugin-import/issues/2266
@@ -10,6 +12,12 @@ import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
 
 export function Dashboard() {
+  useEffect(() => {
+    api.get('/api/userGroups').then(res => {
+      console.log(res);
+    });
+  }, []);
+
   const dataList = [
     // TODO: Replace this with backend call service
     {

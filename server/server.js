@@ -18,7 +18,7 @@ const webRoot = path.join(root, 'web', 'build');
 app.use(cors({
   origin : process.env.uiOrigin, 
   credentials: true, 
-  allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie'
+  allowedHeaders : 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept, Set-Cookie, *',
 }));
 
 app.use(sessions({

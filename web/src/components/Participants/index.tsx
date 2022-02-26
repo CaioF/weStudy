@@ -1,33 +1,32 @@
-import { Flex, Stack, Text } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { useSwiperSlide } from 'swiper/react';
-import { Button } from '../Button';
-import { Circle } from '../Circle';
-import { Rating, Rate } from '../Rating';
+import { Flex, Stack, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Button } from "../Button";
+import { Circle } from "../Circle";
+import { Rating, Rate } from "../Rating";
 
 const participants = [
   {
-    name: 'Joe Doe',
+    name: "Joe Doe",
     rate: 4.2,
   },
   {
-    name: 'Uriel Alves',
+    name: "Uriel Alves",
     rate: 2,
   },
   {
-    name: 'Joe Doe',
+    name: "Joe Doe",
     rate: 4.2,
   },
   {
-    name: 'Uriel Alves',
+    name: "Uriel Alves",
     rate: 3,
   },
   {
-    name: 'Joe Doe',
+    name: "Joe Doe",
     rate: 4.2,
   },
   {
-    name: 'Uriel Alves',
+    name: "Uriel Alves",
     rate: 4,
   },
 ];
@@ -65,7 +64,7 @@ function Participant({ name, rate }: ParticipantProps) {
       <Flex alignItems="center">
         <Rating
           currentRate={selectedRating}
-          onClick={rating => setSelectedRating(rating)}
+          onClick={(rating) => setSelectedRating(rating)}
         />
 
         <Button
@@ -75,7 +74,7 @@ function Participant({ name, rate }: ParticipantProps) {
           bgColor="red.500"
           height="24px"
           paddingX="16px"
-          onClick={() => console.log('Remove')}
+          onClick={() => console.log("Remove")}
         >
           Remove
         </Button>

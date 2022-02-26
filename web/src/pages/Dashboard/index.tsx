@@ -144,7 +144,7 @@ export function Dashboard() {
       <Divider />
       {/* TODO: add styles */}
       <Flex bgColor="gray.300 !important">
-        <TimeSlider label="Time Range" onChange={onTimeChange} />
+        <TimeSlider label="Session time" onChange={onTimeChange} />
         <SelectForm
           label="Subject"
           placeholder="Maths"

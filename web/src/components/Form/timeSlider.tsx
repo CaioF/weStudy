@@ -27,35 +27,31 @@ export function TimeSlider({ label, onChange }: TimeSliderProps) {
   }, [range, onChange]);
 
   return (
-    <Flex
-      bgColor="gray.300"
-      direction="column"
-      justify="center"
-      alignItems="center"
-      width="100%"
-    >
+    <Flex direction="column" width="100%">
+      <Text color="blue.900" pb="4px" fontSize="16px">
+        {label}
+      </Text>
       <RangeSlider
-        bgColor="gray.300"
         onChangeEnd={(val) => setRange({ start: val[0], end: val[1] })}
         defaultValue={[9, 12]}
         min={0}
         max={24}
         step={1}
       >
-        <RangeSliderTrack bg="blue.100">
-          <RangeSliderFilledTrack bg="green.300" />
+        <RangeSliderTrack bg="gray.200">
+          <RangeSliderFilledTrack bg="blue.300" />
         </RangeSliderTrack>
 
         <RangeSliderThumb boxSize={6} index={0}>
-          <Box>
-            <Text>{range.start}</Text>
-          </Box>
+          <Text fontSize="12px" color="blue.900">
+            {range.start}
+          </Text>
         </RangeSliderThumb>
 
         <RangeSliderThumb boxSize={6} index={1}>
-          <Box>
-            <Text>{range.end}</Text>
-          </Box>
+          <Text fontSize="12px" color="blue.900">
+            {range.end}
+          </Text>
         </RangeSliderThumb>
       </RangeSlider>
     </Flex>

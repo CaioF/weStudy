@@ -257,7 +257,12 @@ function setObjectId(obj){
 }
 
 var toDbiD = function(inputId) {    
-    return new mongo.ObjectID(inputId);    
+    try{
+        return new mongo.ObjectID(inputId);    
+    }
+    catch(ex){
+        return null; 
+    }  
 }
 
 module.exports.getOneAsync = getOneAsync;

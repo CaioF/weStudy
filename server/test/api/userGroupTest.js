@@ -77,6 +77,11 @@ describe('Test /api/UserGroups/{groupId}', () => {
         chai.expect(res.body).to.have.property("id");
     });
 
+    it('cannot get group with invalid id', async () => {
+        const res = await chai.request(app).get(`/api/UserGroups/111111`);
+        chai.expect(res.status).to.equal(400);
+    });
+
     it('can update a group', async () => {        
 
         chai.expect(testGroupId).to.not.equal(undefined);

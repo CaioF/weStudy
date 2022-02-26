@@ -1,11 +1,22 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
-import { Flex } from '@chakra-ui/react';
+import { useModal } from '../../hooks';
+import { Flex, Divider } from '@chakra-ui/react';
 /* eslint-disable import/no-unresolved */
 import { Swiper, SwiperSlide, useSwiperSlide } from 'swiper/react'; // https://github.com/import-js/eslint-plugin-import/issues/2266
 import { Navigation } from 'swiper';
 import Card from '../../components/Card';
-import { TimeSlider, Range } from '../../components/Form/';
+import { TimeSlider, Range, SelectForm } from '../../components/Form/';
+import { Button } from '../../components/Button';
+import { GroupForm } from '../../components/GroupForm';
+
+/**
+ * TODO: 
+ * call api to get user info, display user rating and num of user groups
+ * call api to 'post' search groups, display groups in swiper
+ * add button to open create groupmodal form
+ * add labels and divider
+ */
 
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -36,6 +47,9 @@ interface GroupResponse {
 export function Dashboard() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [timeRange, setTimeRange] = useState<Range>({ start: 9, end: 12 });
+  const [groupSize, setGroupSize] = useState<String>('1');
+  const [groupSubject, setGroupSubject] = useState<String>('Maths');
+  const { openModal } = useModal();
 
   useEffect(() => {
     api.get('/api/userGroups').then(res => {
@@ -54,11 +68,19 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
-    api.get('api/userGroups/find')
-  }, [timeRange]);
+    console.log(timeRange, groupSize, groupSubject);
+  }, [timeRange, groupSize, groupSubject]);
 
   function onTimeChange(range: Range){
     setTimeRange(range);
+  }
+
+  function onGroupSizeChange(value: String){
+    setGroupSize(value);
+  }
+
+  function onGroupSubjectChange(value: String){
+    setGroupSubject(value);
   }
 
   const outerCarouselStyle = {
@@ -81,6 +103,18 @@ export function Dashboard() {
       justify="flex-start"
       flexDirection="column"
     >
+      {/* TODO: add user info, top left */}
+      <Flex> 
+        <Button
+            flexGrow={1}
+            flexShrink={0}
+            onClick={() => openModal(<GroupForm action="create" />)}
+            bgColor="green.300"
+          >
+            Create Group
+          </Button>
+      </Flex>
+      
       <div style={outerCarouselStyle}>
         <Swiper
           modules={[Navigation]}
@@ -110,9 +144,15 @@ export function Dashboard() {
         </Swiper>
       </div>
 
+      <Divider />
+      {/* TODO: add styles */}
+      <Flex bgColor="gray.300 !important">
+          <TimeSlider label="Time Range" onChange={onTimeChange}/>
+          <SelectForm label="Subject" placeholder="Maths" options={['Maths', 'Biology', 'Bananas']} onChange={onGroupSubjectChange}/>
+          <SelectForm label="Group Size" placeholder="1" options={['1', '2', '3', '4', '5']} onChange={onGroupSizeChange}/>
+      </Flex>
+      
       <div>
-        <TimeSlider onChange={onTimeChange}/>
-        
         <Swiper
           modules={[Navigation]}
           spaceBetween={50}

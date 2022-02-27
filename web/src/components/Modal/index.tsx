@@ -4,8 +4,8 @@ import {
   ModalOverlay,
   ModalCloseButton,
   ModalBody,
-} from '@chakra-ui/react';
-import { useModal } from '../../hooks/useModal';
+} from "@chakra-ui/react";
+import { useModal } from "../../hooks/useModal";
 
 export function Modal() {
   const { component, isOpen, closeModal } = useModal();
@@ -19,7 +19,7 @@ export function Modal() {
     >
       <ModalOverlay />
       <ModalContent
-        marginTop={{ base: 0, md: '220px' }}
+        marginTop={{ base: 0, md: "220px" }}
         minWidth="300px"
         minHeight="200px"
       >

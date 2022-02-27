@@ -5,52 +5,28 @@ import * as Yup from "yup";
 import { Input } from "../Form/input";
 import { TextArea } from "../Form/textArea";
 import { SelectForm, TimeSlider, Range } from "../Form";
-import { api } from "../../services";
 import { Button } from "../Button";
 import { timezones } from "../../util/timezones";
-import { useToast } from "../../hooks/useToast";
+import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 
 const topics = ["Maths", "Biology", "Technology"];
 const groupSizes = ["1", "2", "3", "4", "5"];
 
-interface GroupFormData {
-  id: string;
-  name: string;
-  description: string;
-  topic: string;
-  groupSize: string;
-  timezone: string;
-}
-
-interface GroupRequestData {
-  name: string;
-  description: string;
-  size: number;
-  timeZone: string;
-  timeRanges: Array<{
-    day: string;
-    startTime: string;
-    endTime: string;
-  }>;
-  subject: string;
-}
-
 interface GroupFormProps {
   action: "create" | "edit";
-  groupFormData?: GroupFormData;
 }
 
-export function GroupForm({ action, groupFormData }: GroupFormProps) {
+export function GroupForm({ action }: GroupFormProps) {
   const [sessionTime, setSessionTime] = useState<Range>({ start: 8, end: 15 });
-  const { showToast } = useToast();
+  const { group, createGroup, editGroup, deleteGroup } = useGroupPageContext();
 
   const formik = useFormik({
     initialValues: {
-      name: groupFormData?.name || "",
-      description: groupFormData?.description || "",
-      topic: groupFormData?.topic || "",
-      groupSize: groupFormData?.groupSize || "",
-      timezone: groupFormData?.timezone || "",
+      name: group?.name || "",
+      description: group?.description || "",
+      topic: group?.topic || "",
+      groupSize: group?.groupSize || "",
+      timezone: group?.timezone || "",
     },
     validationSchema: Yup.object({
       name: Yup.string().required("Required field"),
@@ -60,7 +36,7 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
       timezone: Yup.string().required("Required field"),
     }),
     onSubmit: async (values) => {
-      const data: GroupRequestData = {
+      const data = {
         name: values.name,
         description: values.description,
         size: Number(values.groupSize),
@@ -74,90 +50,17 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
         ],
         subject: values.topic,
       };
-      if (action === "edit" && groupFormData) {
-        updateGroup(data);
+      if (action === "edit" && group) {
+        await editGroup(group.id, data);
       } else {
-        createGroup(data);
+        await createGroup(data);
       }
     },
   });
 
-  async function createGroup(data: GroupRequestData) {
-    try {
-      const response = await api.post("/api/userGroups/", data);
-      if (response) {
-        showToast({
-          status: "success",
-          title: "Group Creation",
-          description: "Group was created successfully",
-        });
-      } else {
-        showToast({
-          status: "error",
-          title: "Group Creation",
-          description: "Could not create group",
-        });
-      }
-    } catch (err) {
-      showToast({
-        status: "error",
-        title: "Group Creation",
-        description: "Could not create group",
-      });
-    }
-  }
-
-  async function updateGroup(data: GroupRequestData) {
-    try {
-      const response = await api.put(
-        `/api/userGroups/${groupFormData?.id}`,
-        data
-      );
-      if (response) {
-        showToast({
-          status: "success",
-          title: "Group Update",
-          description: "Group was updated successfully",
-        });
-      } else {
-        showToast({
-          status: "error",
-          title: "Group Update",
-          description: "Could not update group",
-        });
-      }
-    } catch (err) {
-      showToast({
-        status: "error",
-        title: "Group Update",
-        description: "Could not update group",
-      });
-    }
-  }
-
   async function handleDeleteGroup() {
-    try {
-      const response = await api.delete(`/api/userGroups/${groupFormData?.id}`);
-
-      showToast({
-        status: "success",
-        title: "Group Delete",
-        description: "Group was deleted successfully",
-      });
-      if (response) {
-      } else {
-        showToast({
-          status: "error",
-          title: "Group Delete",
-          description: "Could not delete group",
-        });
-      }
-    } catch (err) {
-      showToast({
-        status: "error",
-        title: "Group Delete",
-        description: "Could not delete group",
-      });
+    if (group) {
+      await deleteGroup(group.id);
     }
   }
 

@@ -10,36 +10,22 @@ import { GroupForm } from "../../components/GroupForm";
 import { JoinRequests } from "../../components/JoinRequests";
 import { InvitationLink } from "../../components/InvitationLink";
 import { useEffect, useState } from "react";
-import { api } from "../../services";
-
-export interface GroupData {
-  id: string;
-  name: string;
-  description: string;
-  topic: string;
-  groupSize: string;
-  timezone: string;
-}
+import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 
 export function Group() {
-  const [group, setGroup] = useState<GroupData>({} as GroupData);
+  const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
+  const { fetchGroup } = useGroupPageContext();
   const { groupId } = useParams();
 
   useEffect(() => {
-    api.get(`/api/userGroups/${groupId}`).then(({ data }) => {
-      // TODO: topic/subject is not coming from the api
-      // TODO: timezone is buggy
-      setGroup({
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        topic: data.subject,
-        groupSize: String(data.size),
-        timezone: data.timeZone,
-      });
-    });
-  }, [groupId]);
+    if (!groupId) return;
+    setIsLoading(true);
+    (async () => {
+      await fetchGroup(groupId);
+    })();
+    setIsLoading(false);
+  }, [fetchGroup, groupId, setIsLoading]);
 
   return (
     <Flex
@@ -67,11 +53,10 @@ export function Group() {
           spacing="16px"
         >
           <Button
+            disabled={isLoading}
             flexGrow={1}
             flexShrink={0}
-            onClick={() =>
-              openModal(<GroupForm action="edit" groupFormData={group} />)
-            }
+            onClick={() => openModal(<GroupForm action="edit" />)}
           >
             Edit group
           </Button>

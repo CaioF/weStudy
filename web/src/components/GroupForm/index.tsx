@@ -172,7 +172,7 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
           <Input
             id="name"
             label="Name"
-            placeholder="Joe"
+            placeholder="Group name"
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
             value={formik.values.name}

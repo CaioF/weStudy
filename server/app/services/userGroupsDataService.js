@@ -245,12 +245,14 @@ var searchGroup = async function(searchRequest) {
     let groupSizeRange = Math.max(1, searchRequest.groupSize * 0.15);
     let groupSizeMax = searchRequest.groupSize + groupSizeRange;
     let groupSizeMin = Math.max(searchRequest.groupSize - groupSizeRange, 1);
+    let startTime = convertToUtcInt(searchRequest.startTime, "UTC");
+    let endTime = convertToUtcInt(searchRequest.startTime, "UTC");
     
     let filter = { 
         "timeRanges" : {  $elemMatch: {
             "day" : searchRequest.day, 
-            "utcStartTime" : { $lte : searchRequest.startTime },
-            "utcEndTime" : { $gte : searchRequest.endTime },
+            "utcStartTime" : { $lte : startTime },
+            "utcEndTime" : { $gte : endTime },
         }},
         "spots" : {  $gte : 1 },
         'subject': {'$regex':  searchRequest.subject, '$options' : 'i'},
@@ -837,18 +839,26 @@ function validateSearchRequest(request){
     if (!request.groupSize || !Number.isInteger(request.groupSize)){
         errors.push("Invalid groupSize");
     }
-
-    if (!request.startTime|| !Number.isInteger(request.startTime)){
+       
+    if (!request.startTime){
         errors.push("Invalid startTime");
     }
+
+    if (Number.isInteger(request.startTime)){
+        errors.push("startTime cannot be a number");
+    } 
   
-    if (!request.endTime|| !Number.isInteger(request.endTime)){
+    if (Number.isInteger(request.endTime)){
+        errors.push("endTime cannot be a number");       
+    }
+
+    if (!request.endTime){
         errors.push("Invalid endTime");
     }
 
-    if (request.startTime > request.endTime){
-        errors.push("Invalid time range, start needs to be less than end");
-    }
+    // if (request.startTime > request.endTime){
+    //     errors.push("Invalid time range, start needs to be less than end");
+    // }
 
     return errors;
 }

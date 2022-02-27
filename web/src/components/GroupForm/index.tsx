@@ -242,14 +242,16 @@ export function GroupForm({ action, groupFormData }: GroupFormProps) {
               {action === "create" ? "Create" : "Update"}
             </Button>
 
-            <Button
-              bgColor="red"
-              disabled={formik.isSubmitting}
-              w={{ base: "100%", md: "fit-content" }}
-              onClick={handleDeleteGroup}
-            >
-              Delete
-            </Button>
+            {action === "edit" && (
+              <Button
+                bgColor="red"
+                disabled={formik.isSubmitting}
+                w={{ base: "100%", md: "fit-content" }}
+                onClick={handleDeleteGroup}
+              >
+                Delete
+              </Button>
+            )}
           </Stack>
         </Stack>
       </form>

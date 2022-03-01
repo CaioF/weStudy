@@ -41,6 +41,18 @@ router.get("/:groupId/link", async function (req, res) {
     }    
 });
 
+/** Delete a group */
+router.delete("/:groupId", async function (req, res) {
+
+    const result = await dataService.tryDeleteGroup(req.session.userId, req.params.groupId); 
+    if (result.success){
+        res.send();
+    }
+    else{
+        res.status(500).send(result.error);
+    }    
+});
+
 /** Create a new group */
 router.post("/", async function (req, res) {
 

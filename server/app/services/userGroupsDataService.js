@@ -655,6 +655,24 @@ var tryCompleteTask = async function(userId, groupId, taskId){
     return { success : true, payload : "Task updated" }
 }
 
+var tryDeleteGroup = async function(userId, groupId){
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+     // try to find the group
+     let group = await dataService.deleteOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId), "ownerId" : userId });
+     if (!group.success){
+         return { success : false, error : `Could not delete group with id '${groupId}', confirm that the group exists and that you are the group owner` }
+     }
+
+     return { success : true }
+}
+
 function generateId(){
     return uuid.v1().replace("-", "");
 }
@@ -899,3 +917,4 @@ module.exports.tryAssignTask = tryAssignTask;
 module.exports.tryCompleteTask = tryCompleteTask;
 module.exports.tryGetGroupLink = tryGetGroupLink;
 module.exports.tryJoinWithLink = tryJoinWithLink;
+module.exports.tryDeleteGroup = tryDeleteGroup;

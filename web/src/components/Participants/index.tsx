@@ -41,7 +41,7 @@ function Participant({ name, rate }: ParticipantProps) {
 
   useEffect(() => {
     if (selectedRating !== 0) {
-      // @TODO: call api to rate participant
+      // TODO: call api to get participant's rate
       console.log(`Selected rating: ${selectedRating}`);
     }
   }, [selectedRating]);

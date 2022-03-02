@@ -232,6 +232,10 @@ var searchGroup = async function(searchRequest) {
         return { success : false, error : errors };
     }
 
+    if (!searchRequest.timeZone){
+        searchRequest.timeZone = "UTC";
+    }
+
     /*
     db.getCollection('user.groups').find({ timeRanges : { $elemMatch  : {
         day : "Monday",
@@ -246,8 +250,8 @@ var searchGroup = async function(searchRequest) {
     let groupSizeRange = Math.max(1, searchRequest.groupSize * 0.15);
     let groupSizeMax = searchRequest.groupSize + groupSizeRange;
     let groupSizeMin = Math.max(searchRequest.groupSize - groupSizeRange, 1);
-    let startTime = convertToUtcInt(searchRequest.startTime, "UTC");
-    let endTime = convertToUtcInt(searchRequest.startTime, "UTC");
+    let startTime = convertToUtcInt(searchRequest.startTime, searchRequest.timeZone);
+    let endTime = convertToUtcInt(searchRequest.startTime, searchRequest.timeZone);
     
     let filter = { 
         "timeRanges" : {  $elemMatch: {

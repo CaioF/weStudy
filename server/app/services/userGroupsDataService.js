@@ -147,6 +147,7 @@ var tryCreateNewGroup = async function(userId, group) {
             ownerId: userId, 
             name: group.name, 
             description : group.description,
+            subject : group.subject,
             size : group.size,
             spots : group.size,
             timeZone : group.timeZone,

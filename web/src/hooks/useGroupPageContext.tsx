@@ -17,19 +17,37 @@ interface CreateEditGroupRequestData {
   subject: string;
 }
 
-interface GroupData {
+interface CreateTaskRequestData {
+  name: string;
+  description: string;
+}
+
+interface Participant {
+  userId: string;
+  name: string;
+  rate: number;
+}
+export interface Task {
+  id: string;
+  description: string;
+  isDone: boolean;
+}
+
+interface Group {
   id: string;
   name: string;
   description: string;
   topic: string;
   groupSize: string;
   timezone: string;
-  participants: { userId: string; name: string; rate: number }[];
-  joinRequests: { userId: string; name: string; rate: number }[];
+  participants: Participant[];
+  joinRequests: Participant[];
+  pendingTasks: Task[];
+  doneTasks: Task[];
 }
 
 interface ContextExport {
-  group: GroupData | null;
+  group: Group | null;
   invitationLink: string | null;
   clearGroup(): void;
   fetchGroup(id: string): Promise<void>;
@@ -40,12 +58,13 @@ interface ContextExport {
   removeParticipant(groupId: string, userId: string): Promise<void>;
   fetchInvitationLink(groupId: string): Promise<void>;
   clearInvitationLink(): void;
+  createTask(groupId: string, data: CreateTaskRequestData): Promise<void>;
 }
 
 const GroupPageContext = createContext<ContextExport>({} as ContextExport);
 
 const GroupPageContextProvider: React.FC = ({ children }) => {
-  const [group, setGroup] = useState<GroupData | null>(null);
+  const [group, setGroup] = useState<Group | null>(null);
   const [invitationLink, setInvitationLink] = useState<"string" | null>(null);
   const { showToast } = useToast();
   const { closeModal } = useModal();
@@ -79,6 +98,20 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
               userId: p.userId,
               name: "placeholder",
               rate: 3,
+            })),
+          pendingTasks: data?.tasks
+            .filter((t: any) => t.status === 0)
+            .map((t: any) => ({
+              id: t.id,
+              isDone: !!t.status,
+              description: t.description,
+            })),
+          doneTasks: data?.tasks
+            .filter((t: any) => t.status === 1)
+            .map((t: any) => ({
+              id: t.id,
+              isDone: !!t.status,
+              description: t.description,
             })),
         });
       } catch (err) {
@@ -223,6 +256,27 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     setInvitationLink(null);
   }, []);
 
+  const createTask = useCallback(
+    async (groupId: string, data: CreateTaskRequestData): Promise<void> => {
+      try {
+        await api.post(`api/userGroups/${groupId}/tasks`, data);
+        await fetchGroup(groupId);
+        showToast({
+          status: "success",
+          title: "Group Tasks",
+          description: "The task was created.",
+        });
+      } catch {
+        showToast({
+          status: "error",
+          title: "Group Tasks",
+          description: "An error occurred. Please try again.",
+        });
+      }
+    },
+    [fetchGroup, showToast]
+  );
+
   return (
     <GroupPageContext.Provider
       value={{
@@ -237,6 +291,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
         removeParticipant,
         fetchInvitationLink,
         clearInvitationLink,
+        createTask,
       }}
     >
       {children}

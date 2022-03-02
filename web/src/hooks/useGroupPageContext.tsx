@@ -188,7 +188,6 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
 
   const removeParticipant = useCallback(
     async (groupId: string, userId: string) => {
-      debugger;
       try {
         await api.post(`/api/userGroups/${groupId}/kick/${userId}`);
         await fetchGroup(groupId);

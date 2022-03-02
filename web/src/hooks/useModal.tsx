@@ -1,5 +1,5 @@
-import { useDisclosure } from '@chakra-ui/react';
-import React, { createContext, useContext, useState } from 'react';
+import { useDisclosure } from "@chakra-ui/react";
+import React, { createContext, useContext, useState } from "react";
 
 interface ModalContextData {
   component: JSX.Element;
@@ -20,6 +20,7 @@ const ModalProvider: React.FC = ({ children }) => {
   }
 
   function closeModal() {
+    console.log("closeModal");
     setComponent(<></>);
     onClose();
   }
@@ -35,7 +36,7 @@ const useModal = (): ModalContextData => {
   const context = useContext(ModalContext);
 
   if (!context) {
-    throw new Error('useModal must be used within an ModalProvider');
+    throw new Error("useModal must be used within an ModalProvider");
   }
 
   return context;

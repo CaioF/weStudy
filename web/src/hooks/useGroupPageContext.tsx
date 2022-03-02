@@ -1,4 +1,6 @@
 import React, { createContext, useState, useContext, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useModal } from "./useModal";
 import { api } from "../services";
 import { useToast } from "./useToast";
 
@@ -38,6 +40,8 @@ const GroupPageContext = createContext<ContextExport>({} as ContextExport);
 const GroupPageContextProvider: React.FC = ({ children }) => {
   const [group, setGroup] = useState<GroupData | null>(null);
   const { showToast } = useToast();
+  const { closeModal } = useModal();
+  const navigate = useNavigate();
 
   const clearGroup = useCallback(() => {
     setGroup(null);
@@ -46,10 +50,6 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
   const fetchGroup = useCallback(async (id: string): Promise<void> => {
     try {
       const { data } = await api.get(`/api/userGroups/${id}`);
-      console.log(data);
-
-      // TODO: topic/subject is not coming from the api
-      // TODO: timezone is buggy
       setGroup({
         id: data?.id,
         name: data?.name,
@@ -78,6 +78,8 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
           title: "Group Create",
           description: "Group was created successfully",
         });
+        closeModal();
+        navigate("/");
       } else {
         showToast({
           status: "error",
@@ -98,20 +100,13 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
   const editGroup = useCallback(
     async (id: string, data: CreateEditGroupRequestData): Promise<void> => {
       try {
-        const response = await api.put(`/api/userGroups/${id}`, data);
-        if (response) {
-          showToast({
-            status: "success",
-            title: "Group Update",
-            description: "Group was updated successfully",
-          });
-        } else {
-          showToast({
-            status: "error",
-            title: "Group Update",
-            description: "Could not update group",
-          });
-        }
+        await api.put(`/api/userGroups/${id}`, data);
+        showToast({
+          status: "success",
+          title: "Group Update",
+          description: "Group was updated successfully",
+        });
+        closeModal();
       } catch (err) {
         showToast({
           status: "error",
@@ -125,21 +120,14 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
 
   const deleteGroup = useCallback(async (id: string) => {
     try {
-      const response = await api.delete(`/api/userGroups/${id}`);
-
+      await api.delete(`/api/userGroups/${id}`);
       showToast({
         status: "success",
         title: "Group Delete",
         description: "Group was deleted successfully",
       });
-      if (response) {
-      } else {
-        showToast({
-          status: "error",
-          title: "Group Delete",
-          description: "Could not delete group",
-        });
-      }
+      navigate("/");
+      closeModal();
     } catch (err) {
       showToast({
         status: "error",
@@ -149,7 +137,6 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     }
   }, []);
 
-  // debugger;
   return (
     <GroupPageContext.Provider
       value={{

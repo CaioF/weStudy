@@ -6,7 +6,7 @@ import {
 } from "@chakra-ui/react";
 
 type InputProps = {
-  label: string;
+  label?: string;
   placeholder: string;
   value: string;
   errorMessage?: string;
@@ -21,9 +21,11 @@ export function Input({
 }: InputProps) {
   return (
     <Flex direction="column" width="100%">
-      <Text color="blue.900" pb="4px" fontSize="16px">
-        {label}
-      </Text>
+      {label && (
+        <Text color="blue.900" pb="4px" fontSize="16px">
+          {label}
+        </Text>
+      )}
       <ChackraInput
         {...rest}
         placeholder={placeholder}

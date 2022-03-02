@@ -30,6 +30,7 @@ interface GroupData {
 
 interface ContextExport {
   group: GroupData | null;
+  invitationLink: string | null;
   clearGroup(): void;
   fetchGroup(id: string): Promise<void>;
   createGroup(data: CreateEditGroupRequestData): Promise<void>;
@@ -37,12 +38,15 @@ interface ContextExport {
   deleteGroup(id: string): Promise<void>;
   acceptJoinRequest(groupId: string, userId: string): Promise<void>;
   removeParticipant(groupId: string, userId: string): Promise<void>;
+  fetchInvitationLink(groupId: string): Promise<void>;
+  clearInvitationLink(): void;
 }
 
 const GroupPageContext = createContext<ContextExport>({} as ContextExport);
 
 const GroupPageContextProvider: React.FC = ({ children }) => {
   const [group, setGroup] = useState<GroupData | null>(null);
+  const [invitationLink, setInvitationLink] = useState<"string" | null>(null);
   const { showToast } = useToast();
   const { closeModal } = useModal();
   const navigate = useNavigate();
@@ -204,10 +208,27 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     [showToast, fetchGroup]
   );
 
+  const fetchInvitationLink = useCallback(
+    async (groupId: string): Promise<void> => {
+      try {
+        const { data } = await api.get(`/api/userGroups/${groupId}/link`);
+        setInvitationLink(data);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    []
+  );
+
+  const clearInvitationLink = useCallback(() => {
+    setInvitationLink(null);
+  }, []);
+
   return (
     <GroupPageContext.Provider
       value={{
         group,
+        invitationLink,
         clearGroup,
         fetchGroup,
         createGroup,
@@ -215,6 +236,8 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
         deleteGroup,
         acceptJoinRequest,
         removeParticipant,
+        fetchInvitationLink,
+        clearInvitationLink,
       }}
     >
       {children}

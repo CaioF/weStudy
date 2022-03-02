@@ -14,7 +14,13 @@ import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 
 export function Group() {
   const { openModal } = useModal();
-  const { fetchGroup, group, clearGroup } = useGroupPageContext();
+  const {
+    fetchGroup,
+    group,
+    clearGroup,
+    fetchInvitationLink,
+    clearInvitationLink,
+  } = useGroupPageContext();
   const { groupId } = useParams();
 
   useEffect(() => {
@@ -24,6 +30,14 @@ export function Group() {
 
     return clearGroup;
   }, [groupId, fetchGroup, clearGroup]);
+
+  useEffect(() => {
+    (async () => {
+      await fetchInvitationLink(groupId as string);
+    })();
+
+    return clearInvitationLink;
+  }, [groupId, fetchInvitationLink, clearInvitationLink]);
 
   return (
     <Flex

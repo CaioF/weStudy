@@ -1,38 +1,9 @@
 import { Flex, Stack, Text } from "@chakra-ui/react";
-import { group } from "console";
 import { useEffect, useState } from "react";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 import { Button } from "../Button";
 import { Circle } from "../Circle";
 import { Rating, Rate } from "../Rating";
-
-const participants = [
-  {
-    name: "Joe Doe",
-    rate: 4.2,
-  },
-  {
-    name: "Uriel Alves",
-    rate: 2,
-  },
-  {
-    name: "Joe Doe",
-    rate: 4.2,
-  },
-  {
-    name: "Uriel Alves",
-    rate: 3,
-  },
-  {
-    name: "Joe Doe",
-    rate: 4.2,
-  },
-  {
-    name: "Uriel Alves",
-    rate: 4,
-  },
-];
-
 interface ParticipantProps {
   userId: string;
   name: string;

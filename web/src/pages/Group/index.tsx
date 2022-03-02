@@ -9,23 +9,21 @@ import { useModal } from "../../hooks";
 import { GroupForm } from "../../components/GroupForm";
 import { JoinRequests } from "../../components/JoinRequests";
 import { InvitationLink } from "../../components/InvitationLink";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 
 export function Group() {
-  const [isLoading, setIsLoading] = useState(false);
   const { openModal } = useModal();
-  const { fetchGroup } = useGroupPageContext();
+  const { fetchGroup, group, clearGroup } = useGroupPageContext();
   const { groupId } = useParams();
 
   useEffect(() => {
-    if (!groupId) return;
-    setIsLoading(true);
     (async () => {
-      await fetchGroup(groupId);
+      await fetchGroup(groupId as string);
     })();
-    setIsLoading(false);
-  }, [fetchGroup, groupId, setIsLoading]);
+
+    return clearGroup;
+  }, [groupId, fetchGroup, clearGroup]);
 
   return (
     <Flex
@@ -53,7 +51,7 @@ export function Group() {
           spacing="16px"
         >
           <Button
-            disabled={isLoading}
+            disabled={!group}
             flexGrow={1}
             flexShrink={0}
             onClick={() => openModal(<GroupForm action="edit" />)}

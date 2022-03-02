@@ -237,6 +237,23 @@ var searchGroup = async function(searchRequest) {
     }
 
     /*
+        S'                          E' 
+        |---------------------------|
+
+            S                   E 
+            |*******************|
+
+        S'          E' 
+        |-----------|
+
+                S'          E' 
+                |-----------|
+
+                        S'          E' 
+                        |-----------|
+    */
+
+    /*
     db.getCollection('user.groups').find({ timeRanges : { $elemMatch  : {
         day : "Monday",
         startTime : { $lte : 1300 },
@@ -251,19 +268,18 @@ var searchGroup = async function(searchRequest) {
     let groupSizeMax = searchRequest.groupSize + groupSizeRange;
     let groupSizeMin = Math.max(searchRequest.groupSize - groupSizeRange, 1);
     let startTime = convertToUtcInt(searchRequest.startTime, searchRequest.timeZone);
-    let endTime = convertToUtcInt(searchRequest.startTime, searchRequest.timeZone);
+    let endTime = convertToUtcInt(searchRequest.endTime, searchRequest.timeZone);
     
     let filter = { 
         "timeRanges" : {  $elemMatch: {
             "day" : {'$regex': searchRequest.day, '$options' : 'i'}, 
-            "utcStartTime" : { $lte : startTime },
-            "utcEndTime" : { $gte : endTime },
+            "utcStartTime" : { $lt : endTime },
+            "utcEndTime" : { $gt : startTime },
         }},
         "spots" : {  $gte : 1 },
         'subject': {'$regex':  searchRequest.subject, '$options' : 'i'},
         "size" : { $lte : groupSizeMax },
         "size" : { $gte : groupSizeMin },
-        //TODO: Add group size preferred range
     };
 
     let groups = await dataService.getManyAsync(collectionName, filter );

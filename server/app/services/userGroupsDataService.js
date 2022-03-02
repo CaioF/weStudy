@@ -251,7 +251,7 @@ var searchGroup = async function(searchRequest) {
     
     let filter = { 
         "timeRanges" : {  $elemMatch: {
-            "day" : searchRequest.day, 
+            "day" : {'$regex': searchRequest.day, '$options' : 'i'}, 
             "utcStartTime" : { $lte : startTime },
             "utcEndTime" : { $gte : endTime },
         }},

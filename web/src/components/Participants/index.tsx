@@ -113,7 +113,7 @@ export function Participants() {
       <Stack paddingX="16px" paddingY="8px" spacing="8px" overflowY="scroll">
         {participants.map((participant, index) => (
           <Participant
-            key={`${participant.name}-${index}`}
+            key={index}
             name={participant.name}
             rate={participant.rate}
           />

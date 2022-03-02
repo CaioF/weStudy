@@ -1,4 +1,5 @@
 import { useToast as useChackraToast } from '@chakra-ui/react';
+import { useCallback } from 'react';
 
 interface Toast {
   status: 'success' | 'error',
@@ -9,7 +10,7 @@ interface Toast {
 function useToast() {
   const toast = useChackraToast();
 
-  function showToast({ status, title, description}: Toast) {
+  const showToast = useCallback(({ status, title, description}: Toast) => {
     toast({
       title,
       description,
@@ -18,7 +19,7 @@ function useToast() {
       isClosable: true,
       position: 'top-right'
     })
-  }
+  }, [toast])
   
   return { showToast };
 }

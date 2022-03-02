@@ -47,55 +47,58 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     setGroup(null);
   }, []);
 
-  const fetchGroup = useCallback(async (id: string): Promise<void> => {
-    try {
-      const { data } = await api.get(`/api/userGroups/${id}`);
-      setGroup({
-        id: data?.id,
-        name: data?.name,
-        description: data?.description,
-        topic: data?.subject,
-        groupSize: String(data?.size),
-        timezone: data?.timeZone,
-      });
-    } catch (err) {
-      showToast({
-        status: "error",
-        title: "Group Data",
-        description: "Could not load data",
-      });
-    }
-  }, []);
-
-  const createGroup = useCallback(async function (
-    data: CreateEditGroupRequestData
-  ) {
-    try {
-      const response = await api.post("/api/userGroups", data);
-      if (response) {
-        showToast({
-          status: "success",
-          title: "Group Create",
-          description: "Group was created successfully",
+  const fetchGroup = useCallback(
+    async (id: string): Promise<void> => {
+      try {
+        const { data } = await api.get(`/api/userGroups/${id}`);
+        setGroup({
+          id: data?.id,
+          name: data?.name,
+          description: data?.description,
+          topic: data?.subject,
+          groupSize: String(data?.size),
+          timezone: data?.timeZone,
         });
-        closeModal();
-        navigate("/");
-      } else {
+      } catch (err) {
+        showToast({
+          status: "error",
+          title: "Group Data",
+          description: "Could not load data",
+        });
+      }
+    },
+    [showToast]
+  );
+
+  const createGroup = useCallback(
+    async function (data: CreateEditGroupRequestData) {
+      try {
+        const response = await api.post("/api/userGroups", data);
+        if (response) {
+          showToast({
+            status: "success",
+            title: "Group Create",
+            description: "Group was created successfully",
+          });
+          closeModal();
+          navigate("/");
+        } else {
+          showToast({
+            status: "error",
+            title: "Group Create",
+            description: "Could not create group",
+          });
+        }
+      } catch (err) {
         showToast({
           status: "error",
           title: "Group Create",
           description: "Could not create group",
         });
       }
-    } catch (err) {
-      showToast({
-        status: "error",
-        title: "Group Create",
-        description: "Could not create group",
-      });
-    }
-  },
-  []);
+    },
+    [showToast, navigate, closeModal]
+  );
 
   const editGroup = useCallback(
     async (id: string, data: CreateEditGroupRequestData): Promise<void> => {
@@ -115,27 +118,30 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
         });
       }
     },
-    []
+    [closeModal, showToast]
   );
 
-  const deleteGroup = useCallback(async (id: string) => {
-    try {
-      await api.delete(`/api/userGroups/${id}`);
-      showToast({
-        status: "success",
-        title: "Group Delete",
-        description: "Group was deleted successfully",
-      });
-      navigate("/");
-      closeModal();
-    } catch (err) {
-      showToast({
-        status: "error",
-        title: "Group Delete",
-        description: "Could not delete group",
-      });
-    }
-  }, []);
+  const deleteGroup = useCallback(
+    async (id: string) => {
+      try {
+        await api.delete(`/api/userGroups/${id}`);
+        showToast({
+          status: "success",
+          title: "Group Delete",
+          description: "Group was deleted successfully",
+        });
+        navigate("/");
+        closeModal();
+      } catch (err) {
+        showToast({
+          status: "error",
+          title: "Group Delete",
+          description: "Could not delete group",
+        });
+      }
+    },
+    [closeModal, navigate, showToast]
+  );
 
   return (
     <GroupPageContext.Provider

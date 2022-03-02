@@ -60,6 +60,7 @@ export function Group() {
           </Button>
 
           <Button
+            disabled={!group}
             flexGrow={1}
             flexShrink={0}
             onClick={() => openModal(<InvitationLink />)}
@@ -68,12 +69,14 @@ export function Group() {
           </Button>
 
           <Button
+            disabled={!group}
             flexGrow={1}
             flexShrink={0}
             onClick={() => openModal(<JoinRequests />)}
           >
             <Text marginRight="8px">Join requests</Text>
-            <Circle num={2} />
+
+            <Circle num={group?.joinRequests?.length || 0} />
           </Button>
         </Stack>
 

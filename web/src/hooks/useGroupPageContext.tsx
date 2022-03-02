@@ -24,6 +24,8 @@ interface GroupData {
   topic: string;
   groupSize: string;
   timezone: string;
+  participants: { userId: string; name: string; rate: number }[];
+  joinRequests: { userId: string; name: string; rate: number }[];
 }
 
 interface ContextExport {
@@ -33,6 +35,8 @@ interface ContextExport {
   createGroup(data: CreateEditGroupRequestData): Promise<void>;
   editGroup(id: string, data: CreateEditGroupRequestData): Promise<void>;
   deleteGroup(id: string): Promise<void>;
+  acceptJoinRequest(groupId: string, userId: string): Promise<void>;
+  removeParticipant(groupId: string, userId: string): Promise<void>;
 }
 
 const GroupPageContext = createContext<ContextExport>({} as ContextExport);
@@ -58,6 +62,20 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
           topic: data?.subject,
           groupSize: String(data?.size),
           timezone: data?.timeZone,
+          participants: data?.members
+            .filter((p: any) => p.status === 1)
+            .map((p: any) => ({
+              userId: p.userId,
+              name: "placeholder",
+              rate: 3,
+            })),
+          joinRequests: data?.members
+            .filter((p: any) => p.status === 0)
+            .map((p: any) => ({
+              userId: p.userId,
+              name: "placeholder",
+              rate: 3,
+            })),
         });
       } catch (err) {
         showToast({
@@ -143,6 +161,49 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     [closeModal, navigate, showToast]
   );
 
+  const acceptJoinRequest = useCallback(
+    async (groupId: string, userId: string) => {
+      try {
+        await api.post(`/api/userGroups/${groupId}/approve/${userId}`);
+        await fetchGroup(groupId);
+        showToast({
+          status: "success",
+          title: "Group Participant",
+          description: "The participant was accepted.",
+        });
+      } catch {
+        showToast({
+          status: "error",
+          title: "Group Participant",
+          description: "An error occurred. Please try again.",
+        });
+      }
+    },
+    [showToast, fetchGroup]
+  );
+
+  const removeParticipant = useCallback(
+    async (groupId: string, userId: string) => {
+      debugger;
+      try {
+        await api.post(`/api/userGroups/${groupId}/kick/${userId}`);
+        await fetchGroup(groupId);
+        showToast({
+          status: "success",
+          title: "Group Participant",
+          description: "The participant was removed.",
+        });
+      } catch {
+        showToast({
+          status: "error",
+          title: "Group Request",
+          description: "An error occurred. Please try again.",
+        });
+      }
+    },
+    [showToast, fetchGroup]
+  );
+
   return (
     <GroupPageContext.Provider
       value={{
@@ -152,6 +213,8 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
         createGroup,
         editGroup,
         deleteGroup,
+        acceptJoinRequest,
+        removeParticipant,
       }}
     >
       {children}

@@ -122,7 +122,7 @@ var tryGetGroupLink = async function(userId, groupId){
         return { success : false, error : `Unable to generate join link, please try again.` }; 
     }
 
-    return { success : true, payload : `${process.env.ORIGIN}/api/userGroups/${groupId}/joinWithlink/${linkId}` }
+    return { success : true, payload : `${process.env.ORIGIN}/invite?groupId=${groupId}&linkId=${linkId}` }
 }
 
 /** create a new group using the supplied payload  */  

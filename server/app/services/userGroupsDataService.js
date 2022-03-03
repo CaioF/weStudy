@@ -195,6 +195,7 @@ var tryUpdateGroup = async function(userId, groupId, group) {
     const update = { 
         $set : { 
             ownerId: userId, 
+            name: group.name, 
             description: group.description, 
             subject: group.subject, 
             size : group.size,
@@ -570,7 +571,7 @@ var tryCreateTask = async function(userId, groupId, task) {
         return { success : false, error : `Unable to add task to group, please try again.` }; 
     }
 
-    return updatedGroup;
+    return await convertDetailedDocument(updatedGroup, userId);
 }
 
 /** Assign a task to a user, anyone in the group can do this */
@@ -738,6 +739,7 @@ function convertDocument(doc){
     var returnObj = {        
         id : doc.id,
         ownerId : doc.ownerId,
+        name: doc.name, 
         description: doc.description, 
         subject: doc.subject, 
         size : doc.size,
@@ -842,9 +844,9 @@ function validateGroup(group, userId){
         errors.push("Invalid group");
     }
     
-    // if (!group.name){
-    //     errors.push("Invalid group name");
-    // }
+    if (!group.name){
+        errors.push("Invalid group name");
+    }
 
     // for now we will allow free form subjects
     if (!group.subject){

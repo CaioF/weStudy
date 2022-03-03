@@ -740,7 +740,6 @@ function convertDocument(doc){
     var returnObj = {        
         id : doc.id,
         ownerId : doc.ownerId,
-        name: doc.name, 
         description: doc.description, 
         subject: doc.subject, 
         size : doc.size,

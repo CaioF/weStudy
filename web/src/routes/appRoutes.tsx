@@ -24,7 +24,7 @@ export const routes: Record<string, AppRoute> = {
   groupInvite: {
     path: "/invite",
     component: <GroupInvite />,
-    visibility: "public",
+    visibility: "signedIn",
   },
   dashboard: {
     path: "/dashboard",

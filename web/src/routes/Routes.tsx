@@ -2,6 +2,7 @@ import {
   Routes as ReactDOMRoutes,
   Route as ReactDOMRoute,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { routes } from "./appRoutes";
 import { useAuth } from "../hooks";
@@ -17,15 +18,16 @@ const RouterProxy: FunctionComponent<RouterProxyProps> = ({
   component,
 }) => {
   const { token } = useAuth();
+  const location = useLocation();
 
   if (visibility === "signedOut" && token) {
     const redirectPath = routes.dashboard.path;
-    return <Navigate to={redirectPath} />;
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
   if (visibility === "signedIn" && !token) {
     const redirectPath = routes.signIn.path;
-    return <Navigate to={redirectPath} />;
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
   // visibility === "public"

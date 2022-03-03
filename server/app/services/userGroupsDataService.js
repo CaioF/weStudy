@@ -159,7 +159,7 @@ var tryCreateNewGroup = async function(userId, group) {
             dateUpdated: new Date() }
     }
 
-    let document = await dataService.getOrCreateAsync(collectionName, { "ownerId" : userId, "name": group.name }, update);    
+    let document = await dataService.getOrCreateAsync(collectionName, { "ownerId" : userId }, update);    
     if (!document.success){
         return { success : false, error : `Could not create a new group : ${document.error}` };
     }
@@ -195,13 +195,11 @@ var tryUpdateGroup = async function(userId, groupId, group) {
     const update = { 
         $set : { 
             ownerId: userId, 
-            name: group.name, 
             description: group.description, 
             subject: group.subject, 
             size : group.size,
             timeZone : group.timeZone,
-            timeRanges : times,            
-            //members :group.members,
+            timeRanges : times,          
             dateUpdated: new Date() }
      }
 
@@ -210,7 +208,7 @@ var tryUpdateGroup = async function(userId, groupId, group) {
          return { success : false, error : `Could not update group with id '${groupId}'` };
      }
 
-     return { success : true, payload : convertDocument(doc.payload) };
+     return { success : true, payload : await convertDetailedDocument(doc.payload, userId) };
 }
 
 /** delete a group from the collection  */    
@@ -844,9 +842,9 @@ function validateGroup(group, userId){
         errors.push("Invalid group");
     }
     
-    if (!group.name){
-        errors.push("Invalid group name");
-    }
+    // if (!group.name){
+    //     errors.push("Invalid group name");
+    // }
 
     // for now we will allow free form subjects
     if (!group.subject){

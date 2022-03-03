@@ -43,6 +43,31 @@ var tryGetUserById = async function (userId) {
   return result;
 };
 
+var tryGetUsersById = async function (userIds) {
+  // validate input
+  if (!userIds) {
+    return { success: false, error: 'Invalid user ids' };
+  }
+
+  for (let i = 0; i < userIds.length; i++) {
+    userIds[i] = dataService.toDbiD(userIds[i]);    
+  }
+
+  let filter = { _id : { $in : userIds } };
+
+  const result = await dataService.getManyAsync(collectionName, filter);
+
+  if (!result.success && result.code == 'NOT_FOUND') {
+    return {
+      success: false,
+      error: "No users found",
+    };
+  }
+
+  // return the users
+  return result;
+};
+
 async function tryGetOrCreateUser(userDetails) {
   const update = {
     $setOnInsert: {
@@ -163,6 +188,7 @@ var tryRateUser = async function (userId, targetUserId, rating) {
 
 module.exports.tryGetUserByEmail = tryGetUserByEmail;
 module.exports.tryGetUserById = tryGetUserById;
+module.exports.tryGetUsersById = tryGetUsersById;
 module.exports.tryGetOrCreateUser = tryGetOrCreateUser;
 module.exports.tryDeleteUser = tryDeleteUser;
 module.exports.tryRateUser = tryRateUser;

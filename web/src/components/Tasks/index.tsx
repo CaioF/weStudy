@@ -1,4 +1,4 @@
-import { AddIcon } from '@chakra-ui/icons';
+import { AddIcon } from "@chakra-ui/icons";
 import {
   Flex,
   IconButton,
@@ -9,136 +9,89 @@ import {
   TabPanels,
   Tabs,
   Text,
-} from '@chakra-ui/react';
-import { useEffect, useMemo, useState } from 'react';
-import { useAuth } from '../../hooks';
-import { Circle } from '../Circle';
-import { TaskItem, Task } from './TaskItem';
-
-const fakeTasks: Task[] = [
-  {
-    id: '1',
-    description: 'Research something',
-    isDone: false,
-    assignedUsers: [
-      { id: '123', name: 'Joe' },
-      { id: '432', name: 'Alex' },
-      { id: '4123', name: 'Joao' },
-      { id: '432123', name: 'Patricia' },
-    ],
-  },
-  {
-    id: '2',
-    description: 'Implement something',
-    isDone: false,
-    assignedUsers: [
-      { id: '123', name: 'Joe' },
-      { id: '432', name: 'Alex' },
-    ],
-  },
-  {
-    id: '3',
-    description: 'Design something',
-    isDone: true,
-    assignedUsers: [],
-  },
-];
+} from "@chakra-ui/react";
+import { useMemo, useState } from "react";
+import { useAuth } from "../../hooks";
+import { useGroupPageContext } from "../../hooks/useGroupPageContext";
+import { Circle } from "../Circle";
+import { TaskItem } from "./TaskItem";
 
 export function Tasks() {
-  const [input, setInput] = useState('');
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [input, setInput] = useState("");
   const { user } = useAuth();
+  const { group, createTask } = useGroupPageContext();
 
-  useEffect(() => {
-    // TODO: Fetch tasks from api
-    setTasks(fakeTasks);
-  }, []);
+  const numOfDoneTasks = useMemo(
+    () => group?.doneTasks.length,
+    [group?.doneTasks]
+  );
 
-  const doneTasks = useMemo(() => {
-    return tasks.filter(task => task.isDone);
-  }, [tasks]);
-
-  const undoneTasks = useMemo(() => {
-    return tasks.filter(task => !task.isDone);
-  }, [tasks]);
-
-  const numOfDoneTasks = useMemo(() => doneTasks.length, [doneTasks]);
-
-  const numOfUndoneTasks = useMemo(() => undoneTasks.length, [undoneTasks]);
+  const numOfPendingTasks = useMemo(
+    () => group?.pendingTasks.length,
+    [group?.pendingTasks]
+  );
 
   function handleDoneToggle(taskId: string) {
     // update only task that was clicked
-    const updatedTasks = tasks.map(task => {
-      return task.id === taskId ? { ...task, isDone: !task.isDone } : task;
-    });
-
+    // const updatedTasks = tasks.map((task) => {
+    //   return task.id === taskId ? { ...task, isDone: !task.isDone } : task;
+    // });
     // TODO: Make api call to update tasks of the group
-    setTasks(updatedTasks);
+    // setTasks(updatedTasks);
   }
 
   function handleRemoveClick(taskId: string) {
-    const updatedTasks = tasks.filter(task => task.id !== taskId);
-
-    // TODO: Make api call to remove task
-    setTasks(updatedTasks);
+    // const updatedTasks = tasks.filter((task) => task.id !== taskId);
+    // // TODO: Make api call to remove task
+    // setTasks(updatedTasks);
   }
 
   function handleAssignToMeClick(taskId: string) {
-    const assignedUser = { id: user.id, name: user.name };
-    // add user to assigned users list of the task
-    const updatedTasks = tasks.map(task => {
-      return task.id === taskId
-        ? { ...task, assignedUsers: [...task.assignedUsers, assignedUser] }
-        : task;
-    });
-
-    // TODO: Make api call to update tasks of the group
-    setTasks(updatedTasks);
+    // const assignedUser = { id: user.id, name: user.name };
+    // // add user to assigned users list of the task
+    // const updatedTasks = tasks.map((task) => {
+    //   return task.id === taskId
+    //     ? { ...task, assignedUsers: [...task.assignedUsers, assignedUser] }
+    //     : task;
+    // });
+    // // TODO: Make api call to update tasks of the group
+    // setTasks(updatedTasks);
   }
 
   function handleRemoveMeClick(taskId: string) {
     // remove user to assigned users list of the task
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        return {
-          ...task,
-          assignedUsers: task.assignedUsers.filter(u => u.id !== user.id),
-        };
-      }
-      return task;
-    });
-
-    // TODO: Make api call to update tasks of the group
-    setTasks(updatedTasks);
+    // const updatedTasks = tasks.map((task) => {
+    //   if (task.id === taskId) {
+    //     return {
+    //       ...task,
+    //       assignedUsers: task.assignedUsers.filter((u) => u.id !== user.id),
+    //     };
+    //   }
+    //   return task;
+    // });
+    // // TODO: Make api call to update tasks of the group
+    // setTasks(updatedTasks);
   }
 
-  function handleCreateTask() {
-    // TODO handle creating according to backend
-    const task: Task = {
-      id: new Date().toUTCString(),
-      assignedUsers: [],
-      isDone: false,
-      description: input,
-    };
-
-    setTasks(state => [...state, task]);
-    setInput('');
+  async function handleCreateTask() {
+    if (!group || input.trim().length === 0) return;
+    await createTask(group?.id, { name: "task", description: input.trim() });
+    setInput("");
   }
 
   function handleEditDescription(taskId: string, description: string) {
     // Update task description
-    const updatedTasks = tasks.map(task => {
-      if (task.id === taskId) {
-        return {
-          ...task,
-          description,
-        };
-      }
-      return task;
-    });
-
-    // TODO: Make api call to update tasks of the group
-    setTasks(updatedTasks);
+    // const updatedTasks = tasks.map((task) => {
+    //   if (task.id === taskId) {
+    //     return {
+    //       ...task,
+    //       description,
+    //     };
+    //   }
+    //   return task;
+    // });
+    // // TODO: Make api call to update tasks of the group
+    // setTasks(updatedTasks);
   }
 
   return (
@@ -168,8 +121,8 @@ export function Tasks() {
             bgColor="white"
             color="blue.900"
             value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyUp={e => (e.key === 'Enter' ? handleCreateTask() : '')}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyUp={(e) => (e.key === "Enter" ? handleCreateTask() : "")}
           />
           <IconButton
             size="sm"
@@ -187,20 +140,20 @@ export function Tasks() {
         <TabList>
           <Tab>
             <Text mr="8px">Pending</Text>
-            <Circle num={numOfUndoneTasks} withBorder />
+            <Circle num={numOfPendingTasks || 0} withBorder />
           </Tab>
 
           <Tab>
             <Text mr="8px">Done</Text>
-            <Circle num={numOfDoneTasks} withBorder />
+            <Circle num={numOfDoneTasks || 0} withBorder />
           </Tab>
         </TabList>
         <TabPanels>
           <TabPanel>
-            {undoneTasks.length === 0 ? (
+            {group?.pendingTasks.length === 0 ? (
               <Text>You have no pending tasks.</Text>
             ) : (
-              undoneTasks.map(task => (
+              group?.pendingTasks.map((task) => (
                 <TaskItem
                   key={task.id}
                   task={task}
@@ -215,10 +168,10 @@ export function Tasks() {
           </TabPanel>
 
           <TabPanel>
-            {doneTasks.length === 0 ? (
+            {group?.doneTasks.length === 0 ? (
               <Text>You have not finished a task yet.</Text>
             ) : (
-              doneTasks.map(task => (
+              group?.doneTasks.map((task) => (
                 <TaskItem
                   key={task.id}
                   task={task}

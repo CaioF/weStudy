@@ -1,46 +1,46 @@
-import { ArrowUpIcon } from '@chakra-ui/icons';
-import { Flex, IconButton, Input, Stack, Text } from '@chakra-ui/react';
-import { useEffect, useState } from 'react';
-import { Message, MessageItem } from './MessageItem';
+import { ArrowUpIcon } from "@chakra-ui/icons";
+import { Flex, IconButton, Input, Stack, Text } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { Message, MessageItem } from "./MessageItem";
 
 export function Chat() {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     // TODO: fetch messages from backend
     setMessages([
       {
-        id: '1',
+        id: "1",
         author: {
-          name: 'Joe',
+          name: "Joe",
         },
-        content: 'Hey guys. how are you?',
-        time: '12:30',
+        content: "Hey guys. how are you?",
+        time: "12:30",
       },
       {
-        id: '2',
+        id: "2",
         author: {
-          name: 'Alex',
+          name: "Alex",
         },
-        content: 'Great! how about you?',
-        time: '12:32',
+        content: "Great! how about you?",
+        time: "12:32",
       },
       {
-        id: '3',
+        id: "3",
         author: {
-          name: 'Joe',
+          name: "Joe",
         },
-        content: 'We have to finish the project',
-        time: '12:34',
+        content: "We have to finish the project",
+        time: "12:34",
       },
       {
-        id: '2',
+        id: "4",
         author: {
-          name: 'Leon',
+          name: "Leon",
         },
-        content: 'Hi!',
-        time: '12:35',
+        content: "Hi!",
+        time: "12:35",
       },
     ]);
   }, []);
@@ -74,7 +74,7 @@ export function Chat() {
       </Flex>
 
       <Stack spacing="16px" padding="16px" overflowY="scroll" flex={1}>
-        {messages.map(message => (
+        {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}
       </Stack>
@@ -87,8 +87,8 @@ export function Chat() {
           bgColor="white"
           color="blue.900"
           value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyUp={e => (e.key === 'Enter' ? handleSendMessage() : '')}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyUp={(e) => (e.key === "Enter" ? handleSendMessage() : "")}
         />
         <IconButton
           size="sm"

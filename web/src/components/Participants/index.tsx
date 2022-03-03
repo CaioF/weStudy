@@ -1,43 +1,18 @@
 import { Flex, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 import { Button } from "../Button";
 import { Circle } from "../Circle";
 import { Rating, Rate } from "../Rating";
-
-const participants = [
-  {
-    name: "Joe Doe",
-    rate: 4.2,
-  },
-  {
-    name: "Uriel Alves",
-    rate: 2,
-  },
-  {
-    name: "Joe Doe",
-    rate: 4.2,
-  },
-  {
-    name: "Uriel Alves",
-    rate: 3,
-  },
-  {
-    name: "Joe Doe",
-    rate: 4.2,
-  },
-  {
-    name: "Uriel Alves",
-    rate: 4,
-  },
-];
-
 interface ParticipantProps {
+  userId: string;
   name: string;
   rate: number;
 }
 
-function Participant({ name, rate }: ParticipantProps) {
+function Participant({ name, rate, userId }: ParticipantProps) {
   const [selectedRating, setSelectedRating] = useState<Rate>(0);
+  const { group, removeParticipant } = useGroupPageContext();
 
   useEffect(() => {
     if (selectedRating !== 0) {
@@ -45,6 +20,12 @@ function Participant({ name, rate }: ParticipantProps) {
       console.log(`Selected rating: ${selectedRating}`);
     }
   }, [selectedRating]);
+
+  async function handleRemoveParticipant(userId: string) {
+    console.log("sds");
+    if (!group) return;
+    await removeParticipant(group.id, userId);
+  }
 
   return (
     <Flex
@@ -74,7 +55,7 @@ function Participant({ name, rate }: ParticipantProps) {
           bgColor="red.500"
           height="24px"
           paddingX="16px"
-          onClick={() => console.log("Remove")}
+          onClick={() => handleRemoveParticipant(userId)}
         >
           Remove
         </Button>
@@ -84,6 +65,8 @@ function Participant({ name, rate }: ParticipantProps) {
 }
 
 export function Participants() {
+  const { group } = useGroupPageContext();
+
   return (
     <Flex
       width="100%"
@@ -107,17 +90,25 @@ export function Participants() {
           Participants
         </Text>
 
-        <Circle num={9} />
+        <Circle num={group?.participants?.length || 0} />
       </Flex>
 
       <Stack paddingX="16px" paddingY="8px" spacing="8px" overflowY="scroll">
-        {participants.map((participant, index) => (
-          <Participant
-            key={`${participant.name}-${index}`}
-            name={participant.name}
-            rate={participant.rate}
-          />
-        ))}
+        {group?.participants.length === 0 ? (
+          <Text textAlign="center">
+            There are no other participants at the moment. Invite a study
+            partner!
+          </Text>
+        ) : (
+          group?.participants.map((participant) => (
+            <Participant
+              key={participant.userId}
+              userId={participant.userId}
+              name={participant.name}
+              rate={participant.rate}
+            />
+          ))
+        )}
       </Stack>
     </Flex>
   );

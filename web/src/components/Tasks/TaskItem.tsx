@@ -5,7 +5,7 @@ import {
   CheckIcon,
   RepeatIcon,
   InfoOutlineIcon,
-} from '@chakra-ui/icons';
+} from "@chakra-ui/icons";
 import {
   Flex,
   Stack,
@@ -18,16 +18,9 @@ import {
   PopoverContent,
   PopoverHeader,
   PopoverBody,
-} from '@chakra-ui/react';
-import { useAuth, User } from '../../hooks';
-import { Button } from '../Button';
-
-export interface Task {
-  id: string;
-  description: string;
-  isDone: boolean;
-  assignedUsers: Pick<User, 'id' | 'name'>[];
-}
+} from "@chakra-ui/react";
+import { useAuth, Task } from "../../hooks";
+import { Button } from "../Button";
 
 interface TaskProps {
   task: Task;
@@ -48,7 +41,7 @@ export function TaskItem({
 }: TaskProps) {
   const { user } = useAuth();
 
-  const isUserAssignedToTask = task.assignedUsers.find(u => u.id === user.id);
+  const isUserAssignedToTask = true;
 
   return (
     <Flex
@@ -62,11 +55,11 @@ export function TaskItem({
         <Editable
           defaultValue={task.description}
           fontSize="14px"
-          width={{ base: '150px', md: '200' }}
+          width={{ base: "150px", md: "200" }}
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
-          onSubmit={nextValue => onEditDescription(task.id, nextValue)}
+          onSubmit={(nextValue) => onEditDescription(task.id, nextValue)}
         >
           <EditablePreview width="100%" />
           <EditableInput />
@@ -76,15 +69,15 @@ export function TaskItem({
       <Stack
         direction="row"
         alignItems="center"
-        spacing={{ base: '4px', md: '8px' }}
+        spacing={{ base: "4px", md: "8px" }}
         overflow="hidden"
       >
-        {task.assignedUsers.length > 0 && (
+        {/* {task.assignedUsers.length > 0 && (
           <Stack
             direction="row"
             alignItems="center"
             spacing="4px"
-            display={{ base: 'none', md: 'flex' }}
+            display={{ base: "none", md: "flex" }}
             maxWidth="120px"
           >
             {isUserAssignedToTask && (
@@ -110,7 +103,7 @@ export function TaskItem({
                   Assigned participants
                 </PopoverHeader>
                 <PopoverBody display="flex" padding="16px" flexWrap="wrap">
-                  {task.assignedUsers.map(user => (
+                  {task.assignedUsers.map((user) => (
                     <Text
                       key={user.id}
                       fontSize="12px"
@@ -130,24 +123,24 @@ export function TaskItem({
               </PopoverContent>
             </Popover>
           </Stack>
-        )}
+        )}} */}
 
         <Button
           buttonType="regular"
-          width={{ base: 'fit-content', md: '100px' }}
+          width={{ base: "fit-content", md: "100px" }}
           fontSize="12px"
           bgColor="blue.300"
           height="24px"
-          paddingX={{ base: '0', md: '16px' }}
+          paddingX={{ base: "0", md: "16px" }}
           onClick={isUserAssignedToTask ? onRemoveMeClick : onAssignToMeClick}
         >
-          <Text display={{ base: 'none', md: 'block' }}>
-            {isUserAssignedToTask ? 'Remove me' : 'Assign to me'}
+          <Text display={{ base: "none", md: "block" }}>
+            {isUserAssignedToTask ? "Remove me" : "Assign to me"}
           </Text>
           {isUserAssignedToTask ? (
-            <MinusIcon display={{ base: 'block', md: 'none' }} />
+            <MinusIcon display={{ base: "block", md: "none" }} />
           ) : (
-            <AddIcon display={{ base: 'block', md: 'none' }} />
+            <AddIcon display={{ base: "block", md: "none" }} />
           )}
         </Button>
 
@@ -159,8 +152,8 @@ export function TaskItem({
           paddingX="16px"
           onClick={onRemoveClick}
         >
-          <Text display={{ base: 'none', md: 'block' }}>Remove</Text>
-          <DeleteIcon display={{ base: 'block', md: 'none' }} />
+          <Text display={{ base: "none", md: "block" }}>Remove</Text>
+          <DeleteIcon display={{ base: "block", md: "none" }} />
         </Button>
 
         <Button
@@ -171,13 +164,13 @@ export function TaskItem({
           paddingX="16px"
           onClick={onDoneToggle}
         >
-          <Text display={{ base: 'none', md: 'block' }}>
-            {task.isDone ? 'Undone' : 'Done'}
+          <Text display={{ base: "none", md: "block" }}>
+            {task.isDone ? "Undone" : "Done"}
           </Text>
           {task.isDone ? (
-            <RepeatIcon display={{ base: 'block', md: 'none' }} />
+            <RepeatIcon display={{ base: "block", md: "none" }} />
           ) : (
-            <CheckIcon display={{ base: 'block', md: 'none' }} />
+            <CheckIcon display={{ base: "block", md: "none" }} />
           )}
         </Button>
       </Stack>

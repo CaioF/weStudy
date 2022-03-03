@@ -11,13 +11,13 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <AuthProvider>
-        <GroupPageContextProvider>
-          <ModalProvider>
+        <ModalProvider>
+          <GroupPageContextProvider>
             <Header />
             <Routes />
             <Modal />
-          </ModalProvider>
-        </GroupPageContextProvider>
+          </GroupPageContextProvider>
+        </ModalProvider>
       </AuthProvider>
     </ChakraProvider>
   );

@@ -123,7 +123,7 @@ var tryGetGroupLink = async function(userId, groupId){
         return { success : false, error : `Unable to generate join link, please try again.` }; 
     }
 
-    return { success : true, payload : `${process.env.ORIGIN}/invite?groupId=${groupId}&linkId=${linkId}` }
+    return { success : true, payload : `${process.env.ORIGIN}invite?groupId=${groupId}&linkId=${linkId}` }
 }
 
 /** create a new group using the supplied payload  */  
@@ -562,7 +562,7 @@ var tryCreateTask = async function(userId, groupId, task) {
 
     const updateFilter = { 
         "_id" : dataService.toDbiD(groupId),       
-        tasks : { $not: { $elemMatch : { name : task.name }}}
+        // tasks : { $not: { $elemMatch : { name : task.name }}}
     };
 
     let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { "_id" : dataService.toDbiD(groupId)  });
@@ -571,8 +571,78 @@ var tryCreateTask = async function(userId, groupId, task) {
         return { success : false, error : `Unable to add task to group, please try again.` }; 
     }
 
-    return await convertDetailedDocument(updatedGroup, userId);
+    return { success : true, payload : await convertDetailedDocument(updatedGroup.payload, userId) };
 }
+
+/** Create a new task
+ * Task.Status :    0 = not assigned
+ *                  1 = assigned
+ *                  2 = done
+ * 
+ */
+ var tryUpdateTask = async function(userId, groupId, taskId, taskUpdate) {
+
+    // validate input
+    if (!userId){
+        return { success : false, error : `Invalid userId` };
+    }
+
+    if (!groupId){
+        return { success : false, error : `Invalid groupId` };
+    }
+
+    if (!taskId){
+        return { success : false, error : `Invalid taskId` };
+    }
+
+    if (!taskUpdate){
+        return { success : false, error : `Invalid task update` };
+    }    
+
+    // try to find the group
+    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
+    if (!group.success){
+        return { success : false, error : `Could not find group with id '${groupId}'` }
+    }
+
+    // Only members can update a link
+    if (!isUserGroupMember(group.payload, userId)){
+        return { success : false, error : `Access denied to this group, only group members can update a task` };
+    }
+
+    let updateFilter = { 
+        _id : dataService.toDbiD(groupId),
+        "tasks.id" : taskId
+    };
+    
+    // construct update
+    let update = { $set : { "tasks.$.updatedAt": new Date() } };
+
+    if (taskUpdate.description){
+        update['$set']["tasks.$.description"] = taskUpdate.description;
+    }
+
+    // can only assign to users
+    if (taskUpdate.assignedUser){
+        update['$set']["tasks.$.status"] = 1;
+        update['$set']["tasks.$.assignedUser"] = askUpdate.assignedUser;
+        update['$set']["tasks.$.assignedAt"] = new Date() ;
+        //let update = { $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() } };
+    }
+
+    // let update = {
+    //     $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() }
+    // }
+
+    // update the group
+    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
+    if (!updatedGroup.success){
+        console.error(`ERROR : ${updatedGroup.error}`);
+        return { success : false, error : "Unable to update group, please try again later" };
+    }
+
+    return { success : true, payload : await convertDetailedDocument(updatedGroup.payload) }
+ }
 
 /** Assign a task to a user, anyone in the group can do this */
 var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
@@ -792,21 +862,23 @@ async function convertDetailedDocument(doc, userId){
     }); 
 
     doc.tasks.forEach(t => {
-        if (userDic[t.userId]){
 
-            let task = {
-                id : t.id,
-                description : t.description,
-                status : t.status,                
-                dateCreated : t.dateCreated,
-                assignedUser : {
-                    id : t.userId,
-                    firstName : userDic[t.userId.toString()].firstName,
-                    lastName : userDic[t.userId.toString()].lastName,
-                }
-            }
-            converted["tasks"].push(task);
+        let task = {
+            id : t.id,
+            description : t.description,
+            status : t.status,                
+            dateCreated : t.dateCreated,            
+        }
+
+        if (userDic[t.userId]){
+            task.assignedUser = {
+                id : t.userId,
+                firstName : userDic[t.userId.toString()].firstName,
+                lastName : userDic[t.userId.toString()].lastName,
+            }          
         }        
+
+        converted["tasks"].push(task);
     });
 
     return converted;
@@ -954,9 +1026,9 @@ function validateTask(task){
         errors.push("Invalid task");
     }
 
-    if (!task.name){
-        errors.push("Invalid name");
-    }   
+    // if (!task.name){
+    //     errors.push("Invalid name");
+    // }   
 
     if (!task.description){
         errors.push("Invalid description");
@@ -985,3 +1057,4 @@ module.exports.tryCompleteTask = tryCompleteTask;
 module.exports.tryGetGroupLink = tryGetGroupLink;
 module.exports.tryJoinWithLink = tryJoinWithLink;
 module.exports.tryDeleteGroup = tryDeleteGroup;
+module.exports.tryUpdateTask = tryUpdateTask;

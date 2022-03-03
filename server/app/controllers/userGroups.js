@@ -149,6 +149,18 @@ router.post("/:groupId/tasks", async function (req, res) {
     }    
 });
 
+/** Create a new task */
+router.patch("/:groupId/tasks/:taskId", async function (req, res) {
+
+    const result = await dataService.tryUpdateTask(req.session.userId, req.params.groupId, req.params.taskId, req.body); 
+    if (result.success){
+        res.json(result.payload);
+    }
+    else{
+        res.status(400).json(result.error);
+    }    
+});
+
 /** assign a task to a user */
 router.post("/:groupId/tasks/:taskId/assign/:targetUserId", async function (req, res) {
 

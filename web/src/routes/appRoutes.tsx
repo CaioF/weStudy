@@ -1,35 +1,44 @@
-import { Home } from '../pages/Home';
-import { SignIn } from '../pages/SignIn';
-import { Group } from '../pages/Group';
-import { Dashboard } from '../pages/Dashboard';
+import { Home } from "../pages/Home";
+import { SignIn } from "../pages/SignIn";
+import { Group } from "../pages/Group";
+import { Dashboard } from "../pages/Dashboard";
+import { GroupInvite } from "../pages/GroupInvite";
 
 interface AppRoute {
   path: string;
   component: JSX.Element;
-  isPrivate?: boolean;
+  visibility: "signedIn" | "signedOut" | "public";
 }
 
 export const routes: Record<string, AppRoute> = {
   home: {
-    path: '/',
+    path: "/",
     component: <Home />,
+    visibility: "signedOut",
   },
   signIn: {
-    path: '/sign-in',
+    path: "/sign-in",
     component: <SignIn />,
+    visibility: "signedOut",
+  },
+  groupInvite: {
+    path: "/invite",
+    component: <GroupInvite />,
+    visibility: "public",
   },
   dashboard: {
-    path: '/dashboard',
+    path: "/dashboard",
     component: <Dashboard />,
-    isPrivate: true,
+    visibility: "signedIn",
   },
   group: {
-    path: '/group/:groupId',
+    path: "/group/:groupId",
     component: <Group />,
-    isPrivate: true,
+    visibility: "signedIn",
   },
   noMatch: {
-    path: '*',
+    path: "*",
     component: <>No Match!</>,
+    visibility: "public",
   },
 };

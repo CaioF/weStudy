@@ -19,7 +19,7 @@ import {
   PopoverHeader,
   PopoverBody,
 } from "@chakra-ui/react";
-import { useAuth, Task } from "../../hooks";
+import { Task } from "../../hooks";
 import { Button } from "../Button";
 
 interface TaskProps {
@@ -39,8 +39,6 @@ export function TaskItem({
   onRemoveMeClick,
   onEditDescription,
 }: TaskProps) {
-  const { user } = useAuth();
-
   const isUserAssignedToTask = true;
 
   return (

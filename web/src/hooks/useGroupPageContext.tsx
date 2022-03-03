@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useModal } from "./useModal";
 import { api } from "../services";
 import { useToast } from "./useToast";
+import { routes } from "../routes";
 
 interface CreateEditGroupRequestData {
   name: string;
@@ -86,6 +87,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
           title: "Group Data",
           description: "Could not load data",
         });
+        navigate(routes.dashboard.path);
       }
     },
     [showToast]
@@ -102,7 +104,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
             description: "Group was created successfully",
           });
           closeModal();
-          navigate("/");
+          navigate(routes.dashboard.path);
         } else {
           showToast({
             status: "error",
@@ -152,7 +154,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
           title: "Group Delete",
           description: "Group was deleted successfully",
         });
-        navigate("/");
+        navigate(routes.dashboard.path);
         closeModal();
       } catch (err) {
         showToast({

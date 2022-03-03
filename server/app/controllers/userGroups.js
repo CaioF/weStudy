@@ -102,7 +102,7 @@ router.post("/:groupId/RequestJoin", async function (req, res) {
 });
 
 /** request to join a group */
-router.get("/:groupId/joinWithlink/:linkId", async function (req, res) {
+router.post("/:groupId/joinWithlink/:linkId", async function (req, res) {
 
     const result = await dataService.tryJoinWithLink(req.session.userId, req.params.groupId, req.params.linkId); 
     if (result.success){

@@ -45,6 +45,10 @@ interface Group {
   joinRequests: Participant[];
   pendingTasks: Task[];
   doneTasks: Task[];
+  sessionTime: {
+    start: number;
+    end: number;
+  };
 }
 
 interface ContextExport {
@@ -128,7 +132,8 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     async (id: string, data: CreateEditGroupRequestData): Promise<void> => {
       try {
         const response = await api.put(`/api/userGroups/${id}`, data);
-        console.log(response.data);
+        const group = mapGroupDataFromResponse(response.data);
+        setGroup(group);
         showToast({
           status: "success",
           title: "Group Update",
@@ -342,6 +347,10 @@ function mapGroupDataFromResponse(data: any): Group {
         isDone: !!t.status,
         description: t.description,
       })),
+    sessionTime: {
+      start: Number(data?.timeRanges[0]?.startTime.slice(0, 2)),
+      end: Number(data?.timeRanges[0]?.endTime.slice(0, 2)),
+    },
   };
 
   return group;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flex, Text, Stack, Box } from "@chakra-ui/react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -44,8 +44,8 @@ export function GroupForm({ action }: GroupFormProps) {
         timeRanges: [
           {
             day: "Saturday",
-            startTime: String(sessionTime.start),
-            endTime: String(sessionTime.end),
+            startTime: `${String(sessionTime.start).padStart(2, "0")}:00`,
+            endTime: `${String(sessionTime.end).padStart(2, "0")}:00`,
           },
         ],
         subject: values.topic,
@@ -57,6 +57,11 @@ export function GroupForm({ action }: GroupFormProps) {
       }
     },
   });
+
+  useEffect(() => {
+    if (!group) return;
+    setSessionTime(group?.sessionTime);
+  }, [group]);
 
   async function handleDeleteGroup() {
     if (group) {

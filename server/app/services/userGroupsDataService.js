@@ -802,8 +802,8 @@ function convertDocument(doc){
 
     doc.timeRanges.forEach(tz => {
         let startTime = convertToStringTime(tz.utcStartTime.toString(), doc.timeZone);
-        let entTime = convertToStringTime(tz.utcEndTime.toString(), doc.timeZone);
-        times.push({ day : tz.day, startTime : startTime, entTime : entTime });
+        let endTime = convertToStringTime(tz.utcEndTime.toString(), doc.timeZone);
+        times.push({ day : tz.day, startTime, endTime });
     }); 
 
     var returnObj = {        

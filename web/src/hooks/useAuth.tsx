@@ -3,6 +3,7 @@ import {
   GoogleLoginResponse,
   GoogleLoginResponseOffline,
 } from "react-google-login";
+import { useLocation, useNavigate, Path } from "react-router-dom";
 
 import { api } from "../services";
 import { useToast } from "./useToast";
@@ -45,9 +46,12 @@ const AuthProvider: React.FC = ({ children }) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   function onGoogleSignInSuccess(res: GoogleLoginResponse): void {
     setIsLoading(true);
+
     api
       .post("/secure/auth", {
         token: res.tokenId,
@@ -65,6 +69,11 @@ const AuthProvider: React.FC = ({ children }) => {
           title: "Authentication",
           description: "You are signed in",
         });
+
+        const state = location?.state as { from: Path };
+        if (state) {
+          navigate(state.from);
+        }
       })
       .catch((err) => {
         console.error(err);

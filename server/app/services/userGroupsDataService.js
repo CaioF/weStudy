@@ -1,4 +1,5 @@
 const dataService = require("./dataService");
+var userDataService = require('./userDataService');
 const collectionName = "user.groups";
 const momentTZ  = require("moment-timezone");
 const timeZonesList = momentTZ.tz.names();
@@ -74,7 +75,7 @@ var tryGetGroup = async function(userId, groupId) {
 
     // The user cannot access the group if he is not an apporved memeber or the group owner
     if (group.payload.members.filter(x => x.userId == userId && x.status == 1).length > 0 || group.payload.ownerId == userId){
-        let convertedGroup = convertDetailedDocument(group.payload, userId);
+        let convertedGroup = await convertDetailedDocument(group.payload, userId);
 
         // return the group
         return { success : true, payload : convertedGroup };
@@ -755,14 +756,59 @@ function convertDocument(doc){
 
 /** Similar to convertDocument, but the full payload, 
  * which includes the isOwner flag, members in group, 
- * and the tasks */
-function convertDetailedDocument(doc, userId){
+ * and the tasks. This will also lookup the users */
+async function convertDetailedDocument(doc, userId){
 
     let converted = convertDocument(doc);
     converted["isOwner"] = userId == doc.ownerId;
-    converted["members"] = doc.members;
-    converted["tasks"] = doc.tasks;
+    converted["tasks"] = [];
+    converted["members"] = [];
     converted["chatId"] = doc.chatId;
+
+    // lookup members
+    let userDic = doc.members.reduce(
+        (users, u, index) => (users[u.userId] = u, users),
+        {}
+    );
+
+    let dbUsers = await userDataService.tryGetUsersById(Object.keys(userDic));
+
+    if (!dbUsers.success){
+        return dbUsers;
+    }
+
+    dbUsers.payload.forEach(m => {
+        converted["members"].push({
+            userId : m.id.toString(),
+            firstName : m.firstName,
+            lastName : m.lastName,
+            rating : m.rating,
+            dateRequested : userDic[m.id.toString()].dateRequested,
+            status : userDic[m.id.toString()].status,
+            dateJoined : userDic[m.id.toString()].dateJoined
+        });
+
+        userDic[m.id.toString()].firstName = m.firstName;
+        userDic[m.id.toString()].lastName = m.lastName;
+    }); 
+
+    doc.tasks.forEach(t => {
+        if (userDic[t.userId]){
+
+            let task = {
+                id : t.id,
+                description : t.description,
+                status : t.status,                
+                dateCreated : t.dateCreated,
+                assignedUser : {
+                    id : t.userId,
+                    firstName : userDic[t.userId.toString()].firstName,
+                    lastName : userDic[t.userId.toString()].lastName,
+                }
+            }
+            converted["tasks"].push(task);
+        }        
+    });
 
     return converted;
 }

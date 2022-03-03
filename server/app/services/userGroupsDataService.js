@@ -503,7 +503,8 @@ var tryKickUser = async function(userId, groupId, requestUserId) {
     };
 
     let update = {
-        $pull: { members: { userId: requestUserId } }
+        $pull: { members: { userId: requestUserId } },
+        $inc : { spots : 1 },
     }
 
     let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });

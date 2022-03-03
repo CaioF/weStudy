@@ -60,6 +60,7 @@ interface ContextExport {
   fetchInvitationLink(groupId: string): Promise<void>;
   clearInvitationLink(): void;
   createTask(groupId: string, data: CreateTaskRequestData): Promise<void>;
+  joinGroupWithLink(groupId: string, linkId: string): Promise<void>;
 }
 
 const GroupPageContext = createContext<ContextExport>({} as ContextExport);
@@ -90,7 +91,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
         navigate(routes.dashboard.path);
       }
     },
-    [showToast]
+    [showToast, navigate]
   );
 
   const createGroup = useCallback(
@@ -201,7 +202,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
       } catch {
         showToast({
           status: "error",
-          title: "Group Request",
+          title: "Group Participant",
           description: "An error occurred. Please try again.",
         });
       }
@@ -246,6 +247,28 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     [fetchGroup, showToast]
   );
 
+  const joinGroupWithLink = useCallback(
+    async (groupId: string, linkId: string): Promise<void> => {
+      try {
+        await api.post(`api/userGroups/${groupId}/joinWithlink/${linkId}`);
+        showToast({
+          status: "success",
+          title: "Group Request",
+          description: "You have joined a new group.",
+        });
+      } catch {
+        showToast({
+          status: "error",
+          title: "Group Request",
+          description: "The group does not exist or link is expired.",
+        });
+      } finally {
+        navigate(routes.dashboard.path);
+      }
+    },
+    [navigate, showToast]
+  );
+
   return (
     <GroupPageContext.Provider
       value={{
@@ -261,6 +284,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
         fetchInvitationLink,
         clearInvitationLink,
         createTask,
+        joinGroupWithLink,
       }}
     >
       {children}

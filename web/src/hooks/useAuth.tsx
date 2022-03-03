@@ -105,6 +105,11 @@ const AuthProvider: React.FC = ({ children }) => {
           title: "Authentication",
           description: "You are signed in",
         });
+
+        const state = location?.state as { from: Path };
+        if (state) {
+          navigate(state.from);
+        }
       })
       .catch((err) => {
         setIsLoading(false);

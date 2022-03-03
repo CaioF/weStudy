@@ -12,14 +12,15 @@ function Card(props: {
   date: Date;
   participants: Number;
   isUserGroup: boolean;
+  isNextCard: boolean;
 }) {
-  const { id, title, summary, date, participants, isUserGroup } = props;
+  const { id, title, summary, date, participants, isUserGroup, isNextCard} = props;
   const navigate = useNavigate();
 
   return (
     <Flex
-      width="20rem"
-      height="12rem"
+      width={isNextCard ? "24rem" : "20rem"}
+      height={isNextCard ? "14rem" : "12rem"}
       borderWidth={1}
       margin={2}
       bgColor="white"
@@ -52,8 +53,9 @@ function Card(props: {
         <Text my={2}>{summary}</Text>
 
         <Flex bgColor={isUserGroup ? "green.300" : "blue.300"}>
-          <Stack justify="space-between" width="100%" p="8px">
-            <Flex width="20rem">
+          {isNextCard ?
+            <Stack justify="space-between" width="100%" p="8px">
+            <Flex width={isNextCard ? "24rem" : "20rem"}>
               <Text
                 fontWeight="bold"
                 textTransform="uppercase"
@@ -79,11 +81,14 @@ function Card(props: {
               display="block"
               width="10rem"
               my={2}
-              onClick={() => navigate(`/group/${id}`)}
+              onClick={() => {isUserGroup ? navigate(`/group/${id}`) : console.log('pls add me to your group')}}
             >
               {isUserGroup ? "Open group" : "Join group"}
             </Button>
-          </Stack>
+          </Stack> 
+          :
+          <Flex width="20rem" height="1rem"></Flex> 
+          }
         </Flex>
       </Stack>
     </Flex>

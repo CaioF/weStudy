@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import { api } from "../../services/api";
 import { useModal } from "../../hooks";
 import { Flex, Divider } from "@chakra-ui/react";
@@ -10,6 +8,13 @@ import Card from "../../components/Card";
 import { TimeSlider, SelectForm, Range } from "../../components/Form/";
 import { Button } from "../../components/Button";
 import { GroupForm } from "../../components/GroupForm";
+import { timezones } from "../../util/timezones";
+import { groupSizes } from "../../util/groupSizes";
+import { topics } from "../../util/topics";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/scrollbar";
 
 /**
  * TODO:
@@ -18,14 +23,6 @@ import { GroupForm } from "../../components/GroupForm";
  * add button to open create groupmodal form
  * add labels and divider
  */
-
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/scrollbar";
-import { timezones } from "../../util/timezones";
-import { groupSizes } from "../../util/groupSizes";
-import { topics } from "../../util/topics";
 
 interface Group {
   id: string;
@@ -54,45 +51,17 @@ const outerCarouselStyle = {
   justify: "space-between",
 };
 
+function formatTime(time: number) {
+  return `${String(time).padStart(2, '0')}:00`
+}
+
 export function Dashboard() {
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [userGroups, setUserGroups] = useState<Group[]>([]);
+  const [searchGroups, setSearchGroups] = useState<Group[]>([]);
   const [sessionTime, setSessionTime] = useState<Range>({ start: 8, end: 15 });
-
-  const formik = useFormik({
-    initialValues: {
-      topic: "",
-      groupSize: "",
-      timezone: "",
-    },
-    validationSchema: Yup.object({
-      topic: Yup.string().required("Required field"),
-      groupSize: Yup.string().required("Required field"),
-      timezone: Yup.string().required("Required field"),
-    }),
-    onSubmit: async (values) => {
-      const group = {
-        size: values.groupSize,
-        timeZone: values.timezone,
-        timeRanges: [
-          {
-            day: "Saturday",
-            startTime: String(sessionTime.start),
-            endTime: String(sessionTime.end),
-          },
-        ],
-        subject: values.topic,
-      };
-      try {
-        const response = await api.post("/api/userGroups", group);
-        if (response) {
-          // TODO: show success toast
-        }
-      } catch (err) {
-        // TODO: show error toast
-      }
-    },
-  });
-
+  const [subject, setSubject] = useState('Maths');
+  const [timezone, setTimezone] = useState('Europe/London');
+  const [groupSize, setGroupSize] = useState(5);
   const { openModal } = useModal();
 
   useEffect(() => {
@@ -106,9 +75,33 @@ export function Dashboard() {
           dateCreated: group.dateCreated,
         };
       });
-      setGroups(groups);
+      setUserGroups(groups);
     });
   }, []);
+
+  useEffect(() => {
+    api.post("/api/userGroups/find", {
+      "day": "Sunday",
+      "startTime": `${sessionTime.start}:00`,
+      "endTime": `${sessionTime.end}:00`,
+      "subject": subject,
+      "groupSize": groupSize,
+      "timezone": timezone,
+    }).then((res) => {
+      const groups = res.data.map((group: GroupResponse) => {
+        if(group.availibleSpots > 1) {
+          return {
+            id: group.id,
+            name: group.name,
+            description: group.description,
+            members: group.size - (group.availibleSpots - 1),
+            dateCreated: group.dateCreated,
+          };
+        }
+      });
+      setSearchGroups(groups);
+    });
+    }, [sessionTime.start, sessionTime.end, subject, groupSize, timezone]);
 
   return (
     <Flex
@@ -143,18 +136,21 @@ export function Dashboard() {
           // onSwiper={swiper => console.log(swiper)}
           // onSlideChange={() => console.log('slide change')}
         >
-          {groups.map(function (data) {
+          {userGroups.map(function (data) {
             const { id, name, description, dateCreated, members } = data;
             return (
               <SwiperSlide key={id}>
-                <Card
-                  id={id}
-                  title={name}
-                  summary={description}
-                  date={dateCreated}
-                  participants={members}
-                  isUserGroup={true}
-                />
+                {({isNext}) => (
+                  <Card
+                    id={id}
+                    title={name}
+                    summary={description}
+                    date={dateCreated}
+                    participants={members}
+                    isUserGroup={true}
+                    isNextCard={isNext}
+                  />
+                )}
               </SwiperSlide>
             );
           })}
@@ -168,10 +164,8 @@ export function Dashboard() {
           label="Topic"
           placeholder="select"
           options={topics}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          value={formik.values.topic}
-          errorMessage={formik.errors.topic}
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
         />
 
         <SelectForm
@@ -179,10 +173,8 @@ export function Dashboard() {
           label="Group size"
           placeholder="select"
           options={groupSizes}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          value={formik.values.groupSize}
-          errorMessage={formik.errors.groupSize}
+          value={groupSize}
+          onChange={(e) => setGroupSize(Number(e.target.value))}
         />
 
         <SelectForm
@@ -190,10 +182,8 @@ export function Dashboard() {
           label="Timezone"
           placeholder="select"
           options={timezones}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          value={formik.values.timezone}
-          errorMessage={formik.errors.timezone}
+          value={timezone}
+          onChange={(e) => setTimezone(e.target.value)}
         />
 
         <TimeSlider
@@ -212,18 +202,21 @@ export function Dashboard() {
           // onSwiper={swiper => console.log(swiper)}
           // onSlideChange={() => console.log('slide change')}
         >
-          {groups.map(function (data) {
+          {searchGroups.map(function (data) {
             const { id, name, description, dateCreated, members } = data;
             return (
               <SwiperSlide key={id}>
-                <Card
-                  id={id}
-                  title={name}
-                  summary={description}
-                  date={dateCreated}
-                  participants={members}
-                  isUserGroup={false}
-                />
+                {({isNext}) => (
+                  <Card
+                    id={id}
+                    title={name}
+                    summary={description}
+                    date={dateCreated}
+                    participants={members}
+                    isUserGroup={false}
+                    isNextCard={isNext}
+                  />
+                )}
               </SwiperSlide>
             );
           })}

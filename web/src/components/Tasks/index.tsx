@@ -11,14 +11,12 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
-import { useAuth } from "../../hooks";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 import { Circle } from "../Circle";
 import { TaskItem } from "./TaskItem";
 
 export function Tasks() {
   const [input, setInput] = useState("");
-  const { user } = useAuth();
   const { group, createTask } = useGroupPageContext();
 
   const numOfDoneTasks = useMemo(

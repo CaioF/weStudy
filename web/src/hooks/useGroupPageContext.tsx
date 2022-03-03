@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useModal } from "./useModal";
 import { api } from "../services";
 import { useToast } from "./useToast";
+import { routes } from "../routes";
 
 interface CreateEditGroupRequestData {
   name: string;
@@ -78,48 +79,15 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
     async (id: string): Promise<void> => {
       try {
         const { data } = await api.get(`/api/userGroups/${id}`);
-        setGroup({
-          id: data?.id,
-          name: data?.name,
-          description: data?.description,
-          topic: data?.subject,
-          groupSize: String(data?.size),
-          timezone: data?.timeZone,
-          participants: data?.members
-            .filter((p: any) => p.status === 1)
-            .map((p: any) => ({
-              userId: p.userId,
-              name: "placeholder",
-              rate: 3,
-            })),
-          joinRequests: data?.members
-            .filter((p: any) => p.status === 0)
-            .map((p: any) => ({
-              userId: p.userId,
-              name: "placeholder",
-              rate: 3,
-            })),
-          pendingTasks: data?.tasks
-            .filter((t: any) => t.status === 0)
-            .map((t: any) => ({
-              id: t.id,
-              isDone: !!t.status,
-              description: t.description,
-            })),
-          doneTasks: data?.tasks
-            .filter((t: any) => t.status === 1)
-            .map((t: any) => ({
-              id: t.id,
-              isDone: !!t.status,
-              description: t.description,
-            })),
-        });
+        const group = mapGroupDataFromResponse(data);
+        setGroup(group);
       } catch (err) {
         showToast({
           status: "error",
           title: "Group Data",
           description: "Could not load data",
         });
+        navigate(routes.dashboard.path);
       }
     },
     [showToast]
@@ -136,7 +104,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
             description: "Group was created successfully",
           });
           closeModal();
-          navigate("/");
+          navigate(routes.dashboard.path);
         } else {
           showToast({
             status: "error",
@@ -158,7 +126,8 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
   const editGroup = useCallback(
     async (id: string, data: CreateEditGroupRequestData): Promise<void> => {
       try {
-        await api.put(`/api/userGroups/${id}`, data);
+        const response = await api.put(`/api/userGroups/${id}`, data);
+        console.log(response.data);
         showToast({
           status: "success",
           title: "Group Update",
@@ -185,7 +154,7 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
           title: "Group Delete",
           description: "Group was deleted successfully",
         });
-        navigate("/");
+        navigate(routes.dashboard.path);
         closeModal();
       } catch (err) {
         showToast({
@@ -312,3 +281,44 @@ const useGroupPageContext = (): ContextExport => {
 };
 
 export { GroupPageContextProvider, useGroupPageContext };
+
+function mapGroupDataFromResponse(data: any): Group {
+  const group: Group = {
+    id: data?.id,
+    name: data?.name,
+    description: data?.description,
+    topic: data?.subject,
+    groupSize: String(data?.size),
+    timezone: data?.timeZone,
+    participants: data?.members
+      .filter((p: any) => p.status === 1)
+      .map((p: any) => ({
+        userId: p.userId,
+        name: "placeholder",
+        rate: 3,
+      })),
+    joinRequests: data?.members
+      .filter((p: any) => p.status === 0)
+      .map((p: any) => ({
+        userId: p.userId,
+        name: "placeholder",
+        rate: 3,
+      })),
+    pendingTasks: data?.tasks
+      .filter((t: any) => t.status === 0)
+      .map((t: any) => ({
+        id: t.id,
+        isDone: !!t.status,
+        description: t.description,
+      })),
+    doneTasks: data?.tasks
+      .filter((t: any) => t.status === 1)
+      .map((t: any) => ({
+        id: t.id,
+        isDone: !!t.status,
+        description: t.description,
+      })),
+  };
+
+  return group;
+}

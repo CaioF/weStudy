@@ -24,6 +24,7 @@ export function Group() {
   const { groupId } = useParams();
 
   useEffect(() => {
+    if (!groupId) return;
     (async () => {
       await fetchGroup(groupId as string);
     })();
@@ -32,6 +33,7 @@ export function Group() {
   }, [groupId, fetchGroup, clearGroup]);
 
   useEffect(() => {
+    if (!groupId) return;
     (async () => {
       await fetchInvitationLink(groupId as string);
     })();

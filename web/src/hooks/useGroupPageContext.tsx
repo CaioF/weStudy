@@ -256,13 +256,13 @@ const GroupPageContextProvider: React.FC = ({ children }) => {
           title: "Group Request",
           description: "You have joined a new group.",
         });
+        navigate(`group/${groupId}`);
       } catch {
         showToast({
           status: "error",
           title: "Group Request",
           description: "The group does not exist or link is expired.",
         });
-      } finally {
         navigate(routes.dashboard.path);
       }
     },
@@ -318,14 +318,14 @@ function mapGroupDataFromResponse(data: any): Group {
       .filter((p: any) => p.status === 1)
       .map((p: any) => ({
         userId: p.userId,
-        name: "placeholder",
+        name: p.firstName,
         rate: 3,
       })),
     joinRequests: data?.members
       .filter((p: any) => p.status === 0)
       .map((p: any) => ({
         userId: p.userId,
-        name: "placeholder",
+        name: p.firstName,
         rate: 3,
       })),
     pendingTasks: data?.tasks

@@ -7,9 +7,34 @@ var tryGetUserByEmail = async function (userEmail) {
     return { success: false, error: 'Invalid email address' };
   }
 
-  const result = await dataService.getOneAsync(collectionName, {
-    email: userEmail,
-  });
+  let agg = [
+    { $match : { "email" : userEmail } },
+    { $unwind: "$ratings" },
+    {
+      $group:  {
+        "_id" : { 
+          "_id" : "$_id", 
+          "email" : "$email", 
+          "firstName" : "$firstName", 
+          "lastName" : "$lastName", 
+          "dateCreated" : "$dateCreated" 
+        },
+        rating : { $avg: "$ratings.rating"}
+      }
+    },
+    {
+      $project : {
+        "_id" : "$_id._id",
+        "email" : "$_id.email",
+        "firstName" : "$_id.firstName",
+        "lastName" : "$_id.lastName",
+        "dateCreated" : "$_id.dateCreated",
+        "rating" : "$rating"
+      }
+    }
+  ]
+
+  const result = await dataService.aggregateOneAsync(collectionName, agg);
 
   if (!result.success && result.code == 'NOT_FOUND') {
     return {
@@ -25,12 +50,37 @@ var tryGetUserByEmail = async function (userEmail) {
 var tryGetUserById = async function (userId) {
   // validate input
   if (!userId) {
-    return { success: false, error: 'Invalid email address' };
+    return { success: false, error: 'Invalid user id' };
   }
 
-  const result = await dataService.getOneAsync(collectionName, {
-    _id: dataService.toDbiD(userId),
-  });
+  let agg = [
+    { $match : { "_id" : dataService.toDbiD(userId) } },
+    { $unwind: "$ratings" },
+    {
+      $group:  {
+        "_id" : { 
+          "_id" : "$_id", 
+          "email" : "$email", 
+          "firstName" : "$firstName", 
+          "lastName" : "$lastName", 
+          "dateCreated" : "$dateCreated" 
+        },
+        rating : { $avg: "$ratings.rating"}
+      }
+    },
+    {
+      $project : {
+        "_id" : "$_id._id",
+        "email" : "$_id.email",
+        "firstName" : "$_id.firstName",
+        "lastName" : "$_id.lastName",
+        "dateCreated" : "$_id.dateCreated",
+        "rating" : "$rating"
+      }
+    }
+  ]
+
+  const result = await dataService.aggregateOneAsync(collectionName, agg);
 
   if (!result.success && result.code == 'NOT_FOUND') {
     return {
@@ -53,9 +103,34 @@ var tryGetUsersById = async function (userIds) {
     userIds[i] = dataService.toDbiD(userIds[i]);    
   }
 
-  let filter = { _id : { $in : userIds } };
+  let agg = [
+    { $match : { _id : { $in : userIds } } },
+    { $unwind: "$ratings" },
+    {
+      $group:  {
+        "_id" : { 
+          "_id" : "$_id", 
+          "email" : "$email", 
+          "firstName" : "$firstName", 
+          "lastName" : "$lastName", 
+          "dateCreated" : "$dateCreated" 
+        },
+        rating : { $avg: "$ratings.rating"}
+      }
+    },
+    {
+      $project : {
+        "_id" : "$_id._id",
+        "email" : "$_id.email",
+        "firstName" : "$_id.firstName",
+        "lastName" : "$_id.lastName",
+        "dateCreated" : "$_id.dateCreated",
+        "rating" : "$rating"
+      }
+    }
+  ]
 
-  const result = await dataService.getManyAsync(collectionName, filter);
+  const result = await dataService.aggregateManyAsync(collectionName, agg);
 
   if (!result.success && result.code == 'NOT_FOUND') {
     return {
@@ -75,6 +150,13 @@ async function tryGetOrCreateUser(userDetails) {
       firstName: userDetails.given_name,
       lastName: userDetails.family_name,
       dateCreated: new Date(),
+      ratings : [
+        {
+          userId : "SYSTEM",
+          rating : 1,
+          dateCreated : new Date()
+        }
+      ]
     },
   };
 

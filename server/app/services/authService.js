@@ -42,7 +42,15 @@ function tryGenerateJwt(user){
   // cretae JWT token, using secret from config
   const token = jwt.sign({ userId : user.id }, process.env.JWT_SECRET); 
 
-  return { success : true, payload : token };
+  let authPayload = {
+    token : token,
+    id : user.id,
+    firstName : user.firstName,
+    lastName : user.lastName,
+    rating : user.rating,
+  }
+
+  return { success : true, payload : authPayload };
 }
 
 /** Verify that the JWT recieved is valid */

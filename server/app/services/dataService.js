@@ -27,6 +27,57 @@ async function getOneAsync(collectionName, filter, project) {
     }
 }
 
+async function aggregateOneAsync(collectionName, aggregation) {
+
+    var collection = await tryGetCollection(collectionName);
+    if (!collection.success){
+        return collection;
+    }
+
+    try {   
+
+        let res = await collection.payload.aggregate(aggregation).toArray();
+        if (!res){
+            return { success : false, error : "Not found", code : "NOT_FOUND" };    
+        }
+
+        if (res.length == 0){
+            return { success : false, error : "Not found", code : "NOT_FOUND" };    
+        }
+
+        return { success : true, payload : setObjectId(res[0]) };
+    } 
+    catch (err) {
+        return { success : false, error : err.message };
+    }
+}
+
+async function aggregateManyAsync(collectionName, aggregation) {
+
+    var collection = await tryGetCollection(collectionName);
+    if (!collection.success){
+        return collection;
+    }
+
+    try {   
+
+        let res = await collection.payload.aggregate(aggregation).toArray();
+        if (!res){
+            return { success : false, error : "Not found", code : "NOT_FOUND" };    
+        }
+
+        res.forEach(element => {
+            element = setObjectId(element)
+        });        
+
+        return { success : true, payload : res };
+    } 
+    catch (err) {
+        return { success : false, error : err.message };
+    }
+}
+
+
 /** Read collection from db */
 async function getManyAsync(collectionName, filter, project) {
 
@@ -272,4 +323,6 @@ module.exports.insertOneAsync = insertOneAsync;
 module.exports.getOrCreateAsync = getOrCreateAsync;
 module.exports.updateOneAsync = updateOneAsync;
 module.exports.deleteOneAsync = deleteOneAsync;
+module.exports.aggregateOneAsync = aggregateOneAsync;
+module.exports.aggregateManyAsync = aggregateManyAsync;
 module.exports.toDbiD = toDbiD;

@@ -23,7 +23,7 @@ router.post('/auth', async (req, res) => {
          return;
        }
        // TODO: return user id and rate
-       res.json({ token : jwt.payload, user : { firstName: gUserDetails.given_name } });
+       res.json(jwt.payload);
     }
     catch (e) {
       console.log(e);
@@ -85,7 +85,7 @@ router.post('/token', async (req, res) => {
         return;
       }
 
-      res.json({ token : jwt.payload });
+      res.json(jwt.payload);
     });
   }
   catch (e) {

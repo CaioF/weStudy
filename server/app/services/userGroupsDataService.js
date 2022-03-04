@@ -123,7 +123,7 @@ var tryGetGroupLink = async function(userId, groupId){
         return { success : false, error : `Unable to generate join link, please try again.` }; 
     }
 
-    return { success : true, payload : `${process.env.ORIGIN}invite?groupId=${groupId}&linkId=${linkId}` }
+    return { success : true, payload : `${process.env.ORIGIN}/invite?groupId=${groupId}&linkId=${linkId}` }
 }
 
 /** create a new group using the supplied payload  */  
@@ -766,8 +766,8 @@ function convertDocument(doc){
 
     doc.timeRanges.forEach(tz => {
         let startTime = convertToStringTime(tz.utcStartTime.toString(), doc.timeZone);
-        let entTime = convertToStringTime(tz.utcEndTime.toString(), doc.timeZone);
-        times.push({ day : tz.day, startTime : startTime, entTime : entTime });
+        let endTime = convertToStringTime(tz.utcEndTime.toString(), doc.timeZone);
+        times.push({ day : tz.day, startTime, endTime });
     }); 
 
     var returnObj = {        

@@ -22,8 +22,8 @@ router.post('/auth', async (req, res) => {
          res.status(400).json(jwt.error);
          return;
        }
- 
-       res.json({ token : jwt.payload });
+       // TODO: return user id and rate
+       res.json({ token : jwt.payload, user : { firstName: gUserDetails.given_name } });
     }
     catch (e) {
       console.log(e);

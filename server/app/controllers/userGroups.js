@@ -161,10 +161,10 @@ router.patch("/:groupId/tasks/:taskId", async function (req, res) {
     }    
 });
 
-/** assign a task to a user */
-router.post("/:groupId/tasks/:taskId/assign/:targetUserId", async function (req, res) {
+/** Remove a task */
+router.delete("/:groupId/tasks/:taskId", async function (req, res) {
 
-    const result = await dataService.tryAssignTask(req.session.userId, req.params.groupId, req.params.taskId, req.params.targetUserId); 
+    const result = await dataService.tryRemoveTask(req.session.userId, req.params.groupId, req.params.taskId); 
     if (result.success){
         res.json(result.payload);
     }
@@ -172,18 +172,5 @@ router.post("/:groupId/tasks/:taskId/assign/:targetUserId", async function (req,
         res.status(400).json(result.error);
     }    
 });
-
-/** Update task as completed */
-router.post("/:groupId/tasks/:taskId/complete", async function (req, res) {
-
-    const result = await dataService.tryCompleteTask(req.session.userId, req.params.groupId, req.params.taskId); 
-    if (result.success){
-        res.json(result.payload);
-    }
-    else{
-        res.status(400).json(result.error);
-    }    
-});
-
 
 module.exports = router;

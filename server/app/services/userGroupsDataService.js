@@ -143,28 +143,29 @@ var tryCreateNewGroup = async function(userId, group) {
         times.push({ day : tz.day, utcStartTime : utcStart, utcEndTime : utcEnd });
     });  
 
-    const update = { 
-        $setOnInsert : { 
-            ownerId: userId, 
-            name: group.name, 
-            description : group.description,
-            subject : group.subject,
-            size : group.size,
-            spots : group.size,
-            timeZone : group.timeZone,
-            timeRanges : times,
-            members : [],
-            tasks : [],
-            dateCreated: new Date(),
-            dateUpdated: new Date() }
+    const groupToCreate = { 
+        ownerId: userId, 
+        name: group.name, 
+        description : group.description,
+        subject : group.subject,
+        size : group.size,
+        spots : group.size,
+        timeZone : group.timeZone,
+        timeRanges : times,
+        members : [
+            { userId : userId, dateRequested : new Date(), status : 1, dateJoined : new Date() }
+        ],
+        tasks : [],
+        dateCreated: new Date(),
+        dateUpdated: new Date()
     }
 
-    let document = await dataService.getOrCreateAsync(collectionName, { "ownerId" : userId }, update);    
+    let document = await dataService.insertOneAsync(collectionName, groupToCreate);    
     if (!document.success){
         return { success : false, error : `Could not create a new group : ${document.error}` };
     }
 
-    return { success : true, payload : convertDocument(document.payload) };
+    return { success : true, payload : await convertDetailedDocument(document.payload, userId) };
 };
 
 /** update a group, overwriting the existing group with the given payload  */  
@@ -493,7 +494,11 @@ var tryKickUser = async function(userId, groupId, requestUserId) {
     // Only the group owner can remove users, again, 
     // this can be done during the update
     if (existingGroup.payload.ownerId != userId){
-        return { success : false, error : "Only the group owner can approve requests" };;
+        return { success : false, error : "Only the group owner can remove users" };;
+    }
+
+    if (existingGroup.payload.ownerId == requestUserId){
+        return { success : false, error : "Cannot remove group owner" };;
     }
 
     let updateFilter = { 
@@ -610,6 +615,10 @@ var tryCreateTask = async function(userId, groupId, task) {
         return { success : false, error : `Access denied to this group, only group members can update a task` };
     }
 
+    if (!group.payload.tasks.some(x => x.id == taskId)){
+        return { success : false, error : `Could not find task with id '${taskId}'` };
+    }
+
     let updateFilter = { 
         _id : dataService.toDbiD(groupId),
         "tasks.id" : taskId
@@ -624,15 +633,24 @@ var tryCreateTask = async function(userId, groupId, task) {
 
     // can only assign to users
     if (taskUpdate.assignedUser){
+
+        // can only assign a task to a group member
+        if (!isUserGroupMember(group.payload, taskUpdate.assignedUser)){
+            return { success : false, error : `Cannot assign task to a user not in the group` };
+        }
+
         update['$set']["tasks.$.status"] = 1;
-        update['$set']["tasks.$.assignedUser"] = askUpdate.assignedUser;
+        update['$set']["tasks.$.assignedUser"] = taskUpdate.assignedUser;
         update['$set']["tasks.$.assignedAt"] = new Date() ;
-        //let update = { $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() } };
     }
 
-    // let update = {
-    //     $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() }
-    // }
+    if (taskUpdate.status != undefined){       
+        update['$set']["tasks.$.status"] = taskUpdate.status;
+        if (taskUpdate.status == 0){
+            update['$set']["tasks.$.assignedUser"] = null
+            update['$set']["tasks.$.assignedAt"] = null;
+        }
+    }
 
     // update the group
     let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
@@ -644,61 +662,7 @@ var tryCreateTask = async function(userId, groupId, task) {
     return { success : true, payload : await convertDetailedDocument(updatedGroup.payload) }
  }
 
-/** Assign a task to a user, anyone in the group can do this */
-var tryAssignTask = async function(userId, groupId, taskId, targetUserId){
-
-    // validate input
-    if (!userId){
-        return { success : false, error : `Invalid userId` };
-    }
-
-    if (!groupId){
-        return { success : false, error : `Invalid groupId` };
-    }
-
-    if (!taskId){
-        return { success : false, error : `Invalid taskId` };
-    }
-
-    if (!targetUserId){
-        return { success : false, error : `Invalid targetUserId` };
-    }    
-
-    // try to find the group
-    let group = await dataService.getOneAsync(collectionName,  { "_id" : dataService.toDbiD(groupId) });
-    if (!group.success){
-        return { success : false, error : `Could not find group with id '${groupId}'` }
-    }
-
-    // check if user is a member of the group or the group owner
-    if (!isUserGroupMember(group.payload, userId)){
-        return { success : false, error : `Access denied to this group, only group members can assign tasks` };
-    }
-
-    if (!group.payload.tasks.some(x => x.id == taskId)){
-        return { success : false, error : `Could not find task with id '${taskId}'` };
-    }
-
-    let updateFilter = { 
-        _id : dataService.toDbiD(groupId),
-        "tasks.id" : taskId
-    };
-    
-    let update = {
-        $set : { "tasks.$.status": 1, "tasks.$.assignedUser": targetUserId, "tasks.$.assignedBy": userId, "tasks.$.assignedAt": new Date() }
-    }
-
-    // update the group
-    let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
-    if (!updatedGroup.success){
-        console.error(`ERROR : ${updatedGroup.error}`);
-        return { success : false, error : "Unable to assign task, please try again later" };
-    }
-
-    return { success : true, payload : "Task asigned" }
-}
-
-var tryCompleteTask = async function(userId, groupId, taskId){
+var tryRemoveTask = async function(userId, groupId, taskId){
     // validate input
     if (!userId){
         return { success : false, error : `Invalid userId` };
@@ -732,19 +696,19 @@ var tryCompleteTask = async function(userId, groupId, taskId){
         _id : dataService.toDbiD(groupId),
         "tasks.id" : taskId
     };
-    
+
     let update = {
-        $set : { "tasks.$.status": 2, "tasks.$.completedBy": userId, "tasks.$.completedAt": new Date() }
+        $pull: { tasks: { id: taskId } }
     }
 
     // update the group
     let updatedGroup = await dataService.updateOneAsync(collectionName, updateFilter, update, { _id : dataService.toDbiD(groupId) });
     if (!updatedGroup.success){
         console.error(`ERROR : ${updatedGroup.error}`);
-        return { success : false, error : "Unable to update task, please try again later" };
+        return { success : false, error : "Unable to remove task, please try again later" };
     }
 
-    return { success : true, payload : "Task updated" }
+    return { success : true, payload : await convertDetailedDocument(updatedGroup.payload, userId) }
 }
 
 var tryDeleteGroup = async function(userId, groupId){
@@ -868,13 +832,14 @@ async function convertDetailedDocument(doc, userId){
             description : t.description,
             status : t.status,                
             dateCreated : t.dateCreated,            
+            assignedUser : {}
         }
 
-        if (userDic[t.userId]){
+        if (userDic[t.assignedUser]){
             task.assignedUser = {
-                id : t.userId,
-                firstName : userDic[t.userId.toString()].firstName,
-                lastName : userDic[t.userId.toString()].lastName,
+                id : t.assignedUser,
+                firstName : userDic[t.assignedUser.toString()].firstName,
+                lastName : userDic[t.assignedUser.toString()].lastName,
             }          
         }        
 
@@ -1051,9 +1016,8 @@ module.exports.tryRequestJoin = tryRequestJoin;
 module.exports.tryGetGroup = tryGetGroup;
 module.exports.tryApproveUserRequest = tryApproveUserRequest;
 module.exports.tryKickUser = tryKickUser;
+module.exports.tryRemoveTask = tryRemoveTask;
 module.exports.tryCreateTask = tryCreateTask;
-module.exports.tryAssignTask = tryAssignTask;
-module.exports.tryCompleteTask = tryCompleteTask;
 module.exports.tryGetGroupLink = tryGetGroupLink;
 module.exports.tryJoinWithLink = tryJoinWithLink;
 module.exports.tryDeleteGroup = tryDeleteGroup;

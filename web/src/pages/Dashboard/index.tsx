@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../../services/api";
 import { useModal } from "../../hooks";
-import { Flex, Divider } from "@chakra-ui/react";
+import { Flex, Divider, Box, useBreakpointValue, Text, Stack } from "@chakra-ui/react";
 import { Swiper, SwiperSlide } from "swiper/react"; // https://github.com/import-js/eslint-plugin-import/issues/2266
 import { Navigation } from "swiper";
 import Card from "../../components/Card";
@@ -48,7 +48,7 @@ const outerCarouselStyle = {
   align: "center",
   textAlign: "center" as const, // https://github.com/typestyle/typestyle/issues/281
   justifyContent: "center",
-  justify: "space-between",
+  justify: "center",
 };
 
 function formatTime(time: number) {
@@ -59,10 +59,12 @@ export function Dashboard() {
   const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [searchGroups, setSearchGroups] = useState<Group[]>([]);
   const [sessionTime, setSessionTime] = useState<Range>({ start: 8, end: 15 });
-  const [subject, setSubject] = useState('Maths');
-  const [timezone, setTimezone] = useState('Europe/London');
-  const [groupSize, setGroupSize] = useState(5);
+  const [subject, setSubject] = useState("");
+  const [timezone, setTimezone] = useState("");
+  const [groupSize, setGroupSize] = useState(0);
+  const [userData, setUserData] = useState<any>({});
   const { openModal } = useModal();
+  const slidesPerView = useBreakpointValue({ base: 1, md: 3 })
 
   useEffect(() => {
     api.get("/api/userGroups").then((res) => {
@@ -79,29 +81,38 @@ export function Dashboard() {
     });
   }, []);
 
+  // useEffect(() => {
+  //   api.
+
   useEffect(() => {
-    api.post("/api/userGroups/find", {
-      "day": "Sunday",
-      "startTime": `${sessionTime.start}:00`,
-      "endTime": `${sessionTime.end}:00`,
-      "subject": subject,
-      "groupSize": groupSize,
-      "timezone": timezone,
-    }).then((res) => {
-      const groups = res.data.map((group: GroupResponse) => {
-        if(group.availibleSpots > 1) {
-          return {
-            id: group.id,
-            name: group.name,
-            description: group.description,
-            members: group.size - (group.availibleSpots - 1),
-            dateCreated: group.dateCreated,
-          };
-        }
-      });
-      setSearchGroups(groups);
-    });
-    }, [sessionTime.start, sessionTime.end, subject, groupSize, timezone]);
+    // TODO: loading symbol ontop of swiper carousel
+    try {
+      api.post("/api/userGroups/find", {
+        "day": "Sunday",
+        "startTime": `${sessionTime.start}:00`,
+        "endTime": `${sessionTime.end}:00`,
+        "subject": subject,
+        "groupSize": groupSize,
+        "timezone": timezone,
+      }).then((res) => {
+        const groups = res.data.map((group: GroupResponse) => {
+          if(group.availibleSpots > 1) {
+            return {
+              id: group.id,
+              name: group.name,
+              description: group.description,
+              members: group.size - (group.availibleSpots - 1),
+              dateCreated: group.dateCreated,
+            };
+          }
+        });
+        // TODO: remove loading symbol from top of swiper carousel
+        setSearchGroups(groups);
+        });
+    } catch (error) {
+      // do nothing lmao
+    }
+  }, [sessionTime.start, sessionTime.end, subject, groupSize, timezone]);
 
   return (
     <Flex
@@ -111,36 +122,57 @@ export function Dashboard() {
       maxWidth="var(--maxWidth)"
       marginX="auto"
       bgColor="gray.300"
-      filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
       justify="flex-start"
       flexDirection="column"
+      p="24px"
+      filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
     >
-      {/* TODO: add user info, top left */}
-      <Flex>
-        <Button
-          flexGrow={1}
-          flexShrink={0}
-          onClick={() => openModal(<GroupForm action="create" />)}
-          bgColor="green.300"
-        >
-          Create Group
-        </Button>
+      <Flex justify={{base: 'center', md: "space-between"}} alignItems="center" mb="32px" flexDirection={{base: 'column', md: 'row'}}>
+        <Stack order={{base: 2, md: 1}} direction="row" spacing="24px">
+          <Flex flexDirection="column" alignItems="center">
+            <Text fontSize="32px" color="green.300" >3/5</Text>
+            <Text mt="-8px" color="gray.500">Your rate</Text>
+          </Flex>
+
+          <Flex flexDirection="column" alignItems="center">
+            <Text fontSize="32px" color="green.300" >{userGroups.length}</Text>
+            <Text mt="-8px" color="gray.500">Groups</Text>
+          </Flex>
+        </Stack>
+
+        <Text order={{base: 1, md: 2}} color="blue.900" fontSize="24px">Your groups</Text>
+
+        <Flex mt={{base: "16px", md: 0 }} order={{base: 3, md: 3}} width={{base: "100%", md: 'fit-content'}}>
+            <Button
+              flexGrow={1}
+              flexShrink={0}
+              onClick={() => openModal(<GroupForm action="create" />)}
+              bgColor="green.300"
+            >
+            Create Group
+          </Button>
+        </Flex>
       </Flex>
+
       <div style={outerCarouselStyle}>
         <Swiper
           modules={[Navigation]}
           spaceBetween={30}
-          slidesPerView={3}
+          slidesPerView={slidesPerView}
+          loop={userGroups.length > 3}
+          centeredSlides={true}
           navigation
+          style={{height: "15rem", paddingTop: "0.5rem"}}
+          
           // onSwiper={swiper => console.log(swiper)}
           // onSlideChange={() => console.log('slide change')}
         >
           {userGroups.map(function (data) {
             const { id, name, description, dateCreated, members } = data;
             return (
-              <SwiperSlide key={id}>
-                {({isNext}) => (
+              <SwiperSlide style={{filter: "drop-shadow(0 0 0.3rem rgba(0, 0, 0, 0.2))"}} key={id}>
+                {({isActive}) => (
                   <Card
                     id={id}
                     title={name}
@@ -148,7 +180,8 @@ export function Dashboard() {
                     date={dateCreated}
                     participants={members}
                     isUserGroup={true}
-                    isNextCard={isNext}
+                    isActiveCard={isActive}
+                    // isActiveCard={userGroups.length > 3 ? isActive : true}
                   />
                 )}
               </SwiperSlide>
@@ -156,57 +189,80 @@ export function Dashboard() {
           })}
         </Swiper>
       </div>
-      <Divider />
+
+      <Box margin="2rem">
+        <Divider />
+      </Box>
+
       {/* TODO: add styles */}
-      <Flex bgColor="gray.300 !important">
-        <SelectForm
-          id="topic"
-          label="Topic"
-          placeholder="select"
-          options={topics}
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-        />
+      <Flex justify="space-between" bgColor="gray.300"  mb="32px">
+        
+        <Flex>
+          <Box width="10rem" paddingRight="1rem">
+            <SelectForm
+              id="topic"
+              placeholder="Subject"
+              options={topics}
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+            />
+          </Box>
 
-        <SelectForm
-          id="groupSize"
-          label="Group size"
-          placeholder="select"
-          options={groupSizes}
-          value={groupSize}
-          onChange={(e) => setGroupSize(Number(e.target.value))}
-        />
+          <Box width="10rem">
+            <SelectForm
+              id="groupSize"
+              placeholder="Group Size"
+              options={groupSizes}
+              value={groupSize}
+              onChange={(e) => setGroupSize(Number(e.target.value))}
+            />
+          </Box>
+        </Flex>
 
-        <SelectForm
-          id="timezone"
-          label="Timezone"
-          placeholder="select"
-          options={timezones}
-          value={timezone}
-          onChange={(e) => setTimezone(e.target.value)}
-        />
+        <Box>
+          <Text color="blue.900" fontSize="24px">Discover new Groups</Text>
+        </Box>
 
-        <TimeSlider
-          label="Session time"
-          onChange={setSessionTime}
-          start={sessionTime.start}
-          end={sessionTime.end}
-        />
+        <Flex>
+          <Box width="15rem" paddingRight="1rem">
+            <TimeSlider
+                label="Session time"
+                onChange={setSessionTime}
+                start={sessionTime.start}
+                end={sessionTime.end}
+              />
+          </Box>
+
+          <Box width="8rem">
+            <SelectForm
+              id="timezone"
+              placeholder="Timezone"
+              options={timezones}
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+            />
+          </Box>
+        </Flex>
+
+
       </Flex>
       <div>
         <Swiper
           modules={[Navigation]}
-          spaceBetween={50}
-          slidesPerView={3}
+          spaceBetween={30}
+          slidesPerView={slidesPerView}
+          loop={userGroups.length > 3}
+          centeredSlides={true}
           navigation
+          style={{height: "15rem", paddingTop: "0.5rem"}}
           // onSwiper={swiper => console.log(swiper)}
           // onSlideChange={() => console.log('slide change')}
         >
           {searchGroups.map(function (data) {
             const { id, name, description, dateCreated, members } = data;
             return (
-              <SwiperSlide key={id}>
-                {({isNext}) => (
+              <SwiperSlide style={{filter: "drop-shadow(0 0 0.3rem rgba(0, 0, 0, 0.2))"}} key={id}>
+                {({isActive}) => (
                   <Card
                     id={id}
                     title={name}
@@ -214,7 +270,8 @@ export function Dashboard() {
                     date={dateCreated}
                     participants={members}
                     isUserGroup={false}
-                    isNextCard={isNext}
+                    isActiveCard={isActive}
+                    // isActiveCard={searchGroups.length > 3 ? isActive : true}
                   />
                 )}
               </SwiperSlide>

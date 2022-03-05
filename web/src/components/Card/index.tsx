@@ -1,5 +1,6 @@
-import { Flex, Text, Button, Stack } from "@chakra-ui/react";
+import { Flex, Text, Stack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "../Button";
 
 function formatDate(date: Date) {
   return new Date(date).toLocaleDateString("en-GB");
@@ -12,28 +13,23 @@ function Card(props: {
   date: Date;
   participants: Number;
   isUserGroup: boolean;
-  isNextCard: boolean;
+  isActiveCard: boolean;
 }) {
-  const { id, title, summary, date, participants, isUserGroup, isNextCard} = props;
+  const { id, title, summary, date, participants, isUserGroup, isActiveCard} = props;
   const navigate = useNavigate();
 
   return (
-    <Flex
-      width={isNextCard ? "24rem" : "20rem"}
-      height={isNextCard ? "14rem" : "12rem"}
-      borderWidth={1}
-      margin={2}
+    <Stack
+      width="20rem"
+      height={isActiveCard ? "14rem" : "12rem"}
+      borderWidth={0}
       bgColor="white"
-      filter="drop-shadow(0px 4px 20px rgba(0, 0, 0, 0.25))"
       borderRadius="10px"
       overflow="hidden"
+      align="center"
+      textAlign="center"
+      justify="space-between"
     >
-      <Stack
-        align="center"
-        textAlign="center"
-        justify="space-between"
-        mt={{ base: 4, md: 0 }}
-      >
         <Flex
           bgColor={isUserGroup ? "green.300" : "blue.300"}
           width="100%"
@@ -53,17 +49,19 @@ function Card(props: {
         <Text my={2}>{summary}</Text>
 
         <Flex bgColor={isUserGroup ? "green.300" : "blue.300"}>
-          {isNextCard ?
+          {isActiveCard ?
             <Stack justify="space-between" width="100%" p="8px">
-            <Flex width={isNextCard ? "24rem" : "20rem"}>
+            <Flex width={"20rem"}>
               <Text
                 fontWeight="bold"
                 textTransform="uppercase"
                 fontSize="lg"
                 letterSpacing="wide"
                 color="white"
+                flex="1"
               >
-                {formatDate(date)}
+                {formatDate(date)}<br />
+                <Text fontSize="10px">Date of creation</Text>
               </Text>
               <Text
                 fontWeight="bold"
@@ -73,10 +71,13 @@ function Card(props: {
                 color="white"
                 flex="1"
               >
-                {participants}
+                {participants}<br />
+                <Text fontSize="10px">Participants</Text>
               </Text>
             </Flex>
             <Button
+              bgColor="white"
+              color={isUserGroup ? "green.300" : "blue.300"}
               alignSelf="center"
               display="block"
               width="10rem"
@@ -90,8 +91,7 @@ function Card(props: {
           <Flex width="20rem" height="1rem"></Flex> 
           }
         </Flex>
-      </Stack>
-    </Flex>
+    </Stack>
   );
 }
 

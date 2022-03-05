@@ -20,10 +20,9 @@ interface TimeSliderProps {
 }
 
 export function TimeSlider({ label, start, end, onChange }: TimeSliderProps) {
-  console.log({ start, end });
   return (
     <Flex direction="column" width="100%">
-      <Text color="blue.900" pb="4px" fontSize="16px">
+      <Text textAlign="center" color="blue.900" pb="4px" fontSize="14px">
         {label}
       </Text>
       <RangeSlider

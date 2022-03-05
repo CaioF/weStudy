@@ -6,7 +6,7 @@ import {
 } from "@chakra-ui/react";
 
 type SelectProps = {
-  label: string;
+  label?: string;
   placeholder: string;
   options: string[];
   errorMessage?: string;
@@ -21,10 +21,12 @@ export function SelectForm({
 }: SelectProps) {
   return (
     <Flex direction="column" width="100%">
-      <Text color="blue.900" pb="4px" fontSize="16px">
-        {label}
-      </Text>
-      <Select {...rest} placeholder={placeholder}>
+      {label && (
+        <Text color="blue.900" pb="4px" fontSize="16px">
+          {label}
+        </Text>
+      )}
+      <Select color="grey" bgColor="white" {...rest} placeholder={placeholder}>
         {options.map((value) => (
           <option key={value} value={value}>
             {value}

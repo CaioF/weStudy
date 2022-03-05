@@ -22,7 +22,6 @@ function Participant({ name, rate, userId }: ParticipantProps) {
   }, [selectedRating]);
 
   async function handleRemoveParticipant(userId: string) {
-    console.log("sds");
     if (!group) return;
     await removeParticipant(group.id, userId);
   }

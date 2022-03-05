@@ -10,10 +10,17 @@ import { useToast } from "./useToast";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID as string;
 
+interface User {
+  name: string;
+}
+
 interface AuthState {
   token: string | null;
+  user: User;
 }
+
 interface AuthContextData {
+  user: User,
   token: string | null;
   googleClientId: string;
   isLoading: boolean;
@@ -31,11 +38,12 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 const AuthProvider: React.FC = ({ children }) => {
   const [data, setData] = useState<AuthState>(() => {
     const token = localStorage.getItem("@weStudy:token");
+    const user = localStorage.getItem("@weStudy:user");
 
-    if (token) {
+    if (token && user) {
       api.defaults.headers.common.authorization = token;
       try {
-        return { token };
+        return { token, user: JSON.parse(user) };
       } catch (err) {
         console.log(err);
       }
@@ -57,12 +65,13 @@ const AuthProvider: React.FC = ({ children }) => {
         token: res.tokenId,
       })
       .then((response) => {
-        const { token } = response.data;
+        const { token, user } = response.data;
         localStorage.setItem("@weStudy:token", token);
+        localStorage.setItem("@weStudy:user", JSON.stringify(user));
 
         api.defaults.headers.common.authorization = token;
 
-        setData({ token });
+        setData({ token, user });
         setIsLoading(false);
         showToast({
           status: "success",
@@ -93,12 +102,13 @@ const AuthProvider: React.FC = ({ children }) => {
         token: res.tokenId,
       })
       .then((response) => {
-        const { token } = response.data;
+        const { token, user } = response.data;
         localStorage.setItem("@weStudy:token", token);
+        localStorage.setItem("@weStudy:user", JSON.stringify(user));
 
         api.defaults.headers.common.authorization = token;
 
-        setData({ token });
+        setData({ token, user });
         setIsLoading(false);
         showToast({
           status: "success",
@@ -131,6 +141,7 @@ const AuthProvider: React.FC = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
+        user: data.user,
         token: data.token,
         googleClientId: GOOGLE_CLIENT_ID,
         isLoading,

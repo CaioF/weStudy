@@ -108,11 +108,19 @@ var tryGetGroupLink = async function(userId, groupId){
 
     // if the group exists and the user is a member, we can create a link and store it on the group
     let linkId = generateId();
-    const update = {         
-        $push : { links : { 
-            id : linkId,  
-            createdBy : userId,
-            dateCreated : new Date() } }
+    // const update = {         
+    //     $push : { links : { 
+    //         id : linkId,  
+    //         createdBy : userId,
+    //         dateCreated : new Date() } }
+    // };
+    const update = {
+        $set : {
+            joinLink : { 
+                id : linkId,  
+                createdBy : userId,
+                dateCreated : new Date() }
+        }        
     };
 
     const updateFilter = { "_id" : dataService.toDbiD(groupId)};
@@ -440,18 +448,23 @@ var tryJoinWithLink = async function(userId, groupId, linkId){
 
     // update the group atomically
     // status : 0 = pending
+    // const update = { 
+    //     $inc : { spots : -1 },
+    //     $push : { members : { userId : userId, dateRequested : new Date(), status : 1, dateJoined : new Date() } },
+    //     $pull: { links: { id: linkId } }
+    // };
+
     const update = { 
-        $inc : { spots : -1 },
         $push : { members : { userId : userId, dateRequested : new Date(), status : 1, dateJoined : new Date() } },
-        $pull: { links: { id: linkId } }
+        $inc : { spots : -1 }
     };
 
     const filter = { 
         "_id" : dataService.toDbiD(groupId),
-        spots : { $gte : 1 },
-        ownerId : { $ne : userId },
-        "links.id" : linkId,
-        members : { $not: { $elemMatch : { userId : userId }}}
+        "spots" : { $gte : 1 },
+        "ownerId" : { $ne : userId },
+        "joinLink.id" : linkId,
+        members : { $not: { $elemMatch : { "userId" : userId }}}
     };
 
     let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
@@ -460,8 +473,7 @@ var tryJoinWithLink = async function(userId, groupId, linkId){
         return { success : false, error : `Unable to join group, please try again.` }; 
     }
 
-    return  { success : true, payload : "Succsesfully join the group" };
-
+    return  { success : true, payload : await convertDetailedDocument(groupJoin.payload, userId) };
 }
 
 /** Try to approve a pending request. 

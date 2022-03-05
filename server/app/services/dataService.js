@@ -234,9 +234,9 @@ async function updateOneAsync(collectionName, filter, update, postUpdateFilter) 
 
         let res = await collection.payload.updateOne(filter, update, { upsert: false });
 
-        if (!res.acknowledged){
+        if (!res.acknowledged || res.modifiedCount == 0){
             // the query failed
-            return { success : false, error : "Could not get or create record" };
+            return { success : false, error : "Could not get or update record" };
         }
 
         let record = await collection.payload.findOne(postUpdateFilter, {});       

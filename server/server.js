@@ -15,7 +15,12 @@ const app = express()
 const port = process.env.PORT; // heroku adds PORT -->
 const webRoot = path.join(root, 'web', 'build');
 const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const io = require('socket.io')(http, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
 
 // initialize app (our server)
 app.use(cors({
@@ -34,11 +39,31 @@ app.use(sessions({
 app.use(bodyParser.json());
 
 // set up chat service
+let sessionID = '';
+
 io.on('connection', function(socket) { 
-  socket.on('message', async (msg) => {
-    await chatService.processMessage(msg, io);
+
+  socket.on('joinChat', async (data) => {
+    sessionID = JSON.stringify(data);
+    await socket.join(sessionID);
+
+    // get chat messages
+    let tryGetChat = await chatService.getChatHistory(sessionID);
+    if (!tryGetChat.success){
+      console.log(`ERROR : ${tryGetChat.error}`);
+      return;
+    }
+    else {
+      tryGetChat.payload.forEach(async (chatMessage) => {
+        await chatService.processMessage(chatMessage, sessionID, io);
+      });
+    }
   });
-})
+
+  socket.on('message', async (msg) => {
+    await chatService.processMessage(msg, sessionID, io);
+  });
+});
 
 // Api auth middleware
 app.use('/api', async (req, res, next) => {

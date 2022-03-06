@@ -9,7 +9,7 @@ import { useModal } from "../../hooks";
 import { GroupForm } from "../../components/GroupForm";
 import { JoinRequests } from "../../components/JoinRequests";
 import { InvitationLink } from "../../components/InvitationLink";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 
 export function Group() {

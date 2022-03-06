@@ -79,7 +79,7 @@ async function aggregateManyAsync(collectionName, aggregation) {
 
 
 /** Read collection from db */
-async function getManyAsync(collectionName, filter, project) {
+async function getManyAsync(collectionName, filter, project, sort) {
 
     var collection = await tryGetCollection(collectionName);
     if (!collection.success){
@@ -90,9 +90,13 @@ async function getManyAsync(collectionName, filter, project) {
 
         if (!project){
             project = {};
-        }  
+        }
+        
+        if (!sort){
+            sort = {};
+        }
 
-        let res = await collection.payload.find(filter, project).toArray();
+        let res = await collection.payload.find(filter, project).sort(sort).toArray();
         res.forEach(element => {
             element = setObjectId(element)
         });

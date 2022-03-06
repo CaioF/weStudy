@@ -3,7 +3,7 @@ const userDs = require("../services/userDataService");
 const dataService = require("./dataService");
 const collectionName = "group.chat";
 
-async function processMessage(msg, io){
+async function processMessage(msg, sessionID, io){
 
     let time = new Date();
 
@@ -32,11 +32,11 @@ async function processMessage(msg, io){
         }
         
         // lookup group
-        var tryGetGroup = await userGroupDs.tryGetGroup(msg.userId, msg.groupId);
-        if (!tryGetGroup.success){
-            console.log(`ERROR : cannot get group : ${tryGetGroup.error}`);
-            return;
-        }
+        // var tryGetGroup = await userGroupDs.tryGetGroup(msg.userId, msg.groupId);
+        // if (!tryGetGroup.success){
+        //     console.log(`ERROR : cannot get group : ${tryGetGroup.error}`);
+        //     return;
+        // }
 
         let chatMessage = { 
             groupId : msg.groupId,
@@ -52,8 +52,8 @@ async function processMessage(msg, io){
             console.log(`ERROR : ${trySave.error}`);
         }
       
-        let chatId = `m:${tryGetGroup.payload.chatId}`;
-        io.emit(chatId, chatMessage);
+        // let chatId = `m:${tryGetGroup.payload.chatId}`;
+        io.to(sessionID).emit('getMessage', chatMessage);
     }
     catch(ex){
         console.log(`ERROR : ${ex.message}`);
@@ -71,10 +71,21 @@ async function trySaveChat(chatMessage) {
     return { success : true };
 }
 
-async function getChatHistory(userId, groupId, page = 1) {     
- 
-    let filter = { groupId : groupId, } 
-    let documents = await dataService.getManyPaginatedAsync(collectionName, filter, {},  page, 50, { time : -1 });    
+
+async function getChatHistory(groupId) {    
+    
+    let project = {
+        _id : 1,
+        groupId : 1, 
+        time: 1, 
+        userId : 1,
+        user : 1,
+        message : 1,
+    };
+
+    // let documents = await dataService.getManyPaginatedAsync(collectionName, {}, {},  page, 50, { time : -1 });    
+    let documents = await dataService.getManyAsync(collectionName, {}, project, { time : -1 });
+
     if (!documents.success){
         return { success : false, error : `Could not read chat history : ${documents.error}` };
     }

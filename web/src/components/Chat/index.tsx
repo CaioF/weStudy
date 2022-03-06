@@ -3,51 +3,53 @@ import { Flex, IconButton, Input, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Message, MessageItem } from "./MessageItem";
 
+// Chat socket
+import socketIOClient from 'socket.io-client';
+import { useAuth, useGroupPageContext } from "../../hooks";
+const socket = socketIOClient(`${process.env.REACT_APP_API_URL}`, {
+  extraHeaders: {
+    'Access-Control-Allow-Origin': '*',
+  }
+})
+
 export function Chat() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const {
+    fetchGroup,
+    group,
+    clearGroup,
+    fetchInvitationLink,
+    clearInvitationLink,
+  } = useGroupPageContext();
+  const { id } = useAuth();
 
+  // Chat socket
   useEffect(() => {
-    // TODO: fetch messages from backend
-    setMessages([
-      {
-        id: "1",
-        author: {
-          name: "Joe",
-        },
-        content: "Hey guys. how are you?",
-        time: "12:30",
-      },
-      {
-        id: "2",
-        author: {
-          name: "Alex",
-        },
-        content: "Great! how about you?",
-        time: "12:32",
-      },
-      {
-        id: "3",
-        author: {
-          name: "Joe",
-        },
-        content: "We have to finish the project",
-        time: "12:34",
-      },
-      {
-        id: "4",
-        author: {
-          name: "Leon",
-        },
-        content: "Hi!",
-        time: "12:35",
-      },
-    ]);
-  }, []);
+    if (!group || !group?.id) return;
+    console.log(group.id)
+    socket.on('getMessage', (message) => {
+      setMessages(state => [...state, message]);
+    });
+    socket.emit('joinChat', group.id);
+  }, [group?.id]);
 
-  function handleSendMessage() {
-    // TODO: implement functionality
-    console.log({ handleSendMessage: input });
+  /**
+    let chatMessage = { 
+            groupId : msg.groupId,
+            time : time, 
+            userId : msg.userId, 
+            user : tryGetUser.payload.firstName, 
+            message : msg.message 
+        };
+   */
+
+  const handleSendMessage = () => {
+    
+    if (!group || !group?.id) return;
+    console.log('handlesendmessage')
+    socket.emit('message', {groupId: group.id, message: input, userId: id});
+    setInput('');
   }
 
   return (
@@ -74,8 +76,8 @@ export function Chat() {
       </Flex>
 
       <Stack spacing="16px" padding="16px" overflowY="scroll" flex={1}>
-        {messages.map((message) => (
-          <MessageItem key={message.id} message={message} />
+        {messages.map((message, index) => (
+          <MessageItem key={index} message={message} />
         ))}
       </Stack>
       <Flex bgColor="blue.300" padding="16px">

@@ -1,5 +1,6 @@
 import { Flex, Stack, Text } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 import { Button } from "../Button";
 import { Circle } from "../Circle";
@@ -13,6 +14,7 @@ interface ParticipantProps {
 function Participant({ name, rate, userId }: ParticipantProps) {
   const [selectedRating, setSelectedRating] = useState<Rate>(0);
   const { group, removeParticipant } = useGroupPageContext();
+  const { id } = useAuth();
 
   useEffect(() => {
     if (selectedRating !== 0) {
@@ -41,24 +43,26 @@ function Participant({ name, rate, userId }: ParticipantProps) {
         <Text fontSize="12px">{rate}/5</Text>
       </Flex>
 
-      <Flex alignItems="center">
-        <Rating
-          currentRate={selectedRating}
-          onClick={(rating) => setSelectedRating(rating)}
-        />
+      {!(userId === id) && (
+        <Flex alignItems="center">
+          <Rating
+            currentRate={selectedRating}
+            onClick={(rating) => setSelectedRating(rating)}
+          />
 
-        <Button
-          marginLeft="16px"
-          buttonType="regular"
-          fontSize="12px"
-          bgColor="red.500"
-          height="24px"
-          paddingX="16px"
-          onClick={() => handleRemoveParticipant(userId)}
-        >
-          Remove
-        </Button>
-      </Flex>
+          <Button
+            marginLeft="16px"
+            buttonType="regular"
+            fontSize="12px"
+            bgColor="red.500"
+            height="24px"
+            paddingX="16px"
+            onClick={() => handleRemoveParticipant(userId)}
+          >
+            Remove
+          </Button>
+        </Flex>
+      )}
     </Flex>
   );
 }

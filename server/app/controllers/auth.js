@@ -22,7 +22,8 @@ router.post('/auth', async (req, res) => {
          res.status(400).json(jwt.error);
          return;
        }
-       // TODO: return user id and rate
+      //  // TODO: return user id and rate
+      //  console.log(jwt.payload);
        res.json(jwt.payload);
     }
     catch (e) {

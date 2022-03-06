@@ -38,6 +38,7 @@ interface Group {
   id: string;
   name: string;
   description: string;
+  isOwner: boolean;
   topic: string;
   groupSize: string;
   timezone: string;
@@ -317,21 +318,22 @@ function mapGroupDataFromResponse(data: any): Group {
     name: data?.name,
     description: data?.description,
     topic: data?.subject,
+    isOwner: data?.isOwner,
     groupSize: String(data?.size),
     timezone: data?.timeZone,
     participants: data?.members
       .filter((p: any) => p.status === 1)
       .map((p: any) => ({
         userId: p.userId,
-        name: p.firstName,
-        rate: 3,
+        name: p.firstName || "unknown",
+        rate: p.status,
       })),
     joinRequests: data?.members
       .filter((p: any) => p.status === 0)
       .map((p: any) => ({
         userId: p.userId,
-        name: p.firstName,
-        rate: 3,
+        name: p.firstName || "unknown",
+        rate: p.status,
       })),
     pendingTasks: data?.tasks
       .filter((t: any) => t.status === 0)

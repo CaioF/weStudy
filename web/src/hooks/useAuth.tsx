@@ -10,20 +10,24 @@ import { useToast } from "./useToast";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID as string;
 
-interface User {
-  name: string;
-}
-
 interface AuthState {
   token: string | null;
-  user: User;
+  id: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  rating: string | null;
 }
 
 interface AuthContextData {
-  user: User,
   token: string | null;
+  id: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  rating: string | null;
+
   googleClientId: string;
   isLoading: boolean;
+
   signOut(): void;
   onGoogleSignInSuccess(
     res: GoogleLoginResponse | GoogleLoginResponseOffline
@@ -38,12 +42,15 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 const AuthProvider: React.FC = ({ children }) => {
   const [data, setData] = useState<AuthState>(() => {
     const token = localStorage.getItem("@weStudy:token");
-    const user = localStorage.getItem("@weStudy:user");
+    const id = localStorage.getItem("@weStudy:id");
+    const firstName = localStorage.getItem("@weStudy:firstName");
+    const lastName = localStorage.getItem("@weStudy:lastName");
+    const rating = localStorage.getItem("@weStudy:rating");
 
-    if (token && user) {
+    if (token && id && rating) {
       api.defaults.headers.common.authorization = token;
       try {
-        return { token, user: JSON.parse(user) };
+        return {token, id, firstName, lastName, rating};
       } catch (err) {
         console.log(err);
       }
@@ -65,13 +72,16 @@ const AuthProvider: React.FC = ({ children }) => {
         token: res.tokenId,
       })
       .then((response) => {
-        const { token, user } = response.data;
+        const { token, id, firstName, lastName, rating } = response.data;
         localStorage.setItem("@weStudy:token", token);
-        localStorage.setItem("@weStudy:user", JSON.stringify(user));
+        localStorage.setItem("@weStudy:id", id);
+        localStorage.setItem("@weStudy:firstName", firstName);
+        localStorage.setItem("@weStudy:lastName", lastName);
+        localStorage.setItem("@weStudy:rating", rating);
 
         api.defaults.headers.common.authorization = token;
 
-        setData({ token, user });
+        setData({ token, id, firstName, lastName, rating });
         setIsLoading(false);
         showToast({
           status: "success",
@@ -102,13 +112,16 @@ const AuthProvider: React.FC = ({ children }) => {
         token: res.tokenId,
       })
       .then((response) => {
-        const { token, user } = response.data;
+        const { token, id, firstName, lastName, rating } = response.data;
         localStorage.setItem("@weStudy:token", token);
-        localStorage.setItem("@weStudy:user", JSON.stringify(user));
+        localStorage.setItem("@weStudy:id", id);
+        localStorage.setItem("@weStudy:firstName", firstName);
+        localStorage.setItem("@weStudy:lastName", lastName);
+        localStorage.setItem("@weStudy:rating", rating);
 
         api.defaults.headers.common.authorization = token;
 
-        setData({ token, user });
+        setData({ token, id, firstName, lastName, rating });
         setIsLoading(false);
         showToast({
           status: "success",
@@ -133,7 +146,10 @@ const AuthProvider: React.FC = ({ children }) => {
 
   const signOut = useCallback(() => {
     localStorage.removeItem("@weStudy:token");
-    localStorage.removeItem("@weStudy:user");
+    localStorage.removeItem("@weStudy:id");
+    localStorage.removeItem("@weStudy:firstName");
+    localStorage.removeItem("@weStudy:lastName");
+    localStorage.removeItem("@weStudy:rating");
 
     setData({} as AuthState);
   }, []);
@@ -141,12 +157,18 @@ const AuthProvider: React.FC = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        user: data.user,
         token: data.token,
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        rating: data.rating,
+
         googleClientId: GOOGLE_CLIENT_ID,
         isLoading,
+
         onGoogleSignInSuccess,
         onGoogleSignUpSuccess,
+
         signOut,
       }}
     >

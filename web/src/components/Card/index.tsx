@@ -1,5 +1,6 @@
 import { Flex, Text, Stack } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../services";
 import { Button } from "../Button";
 
 function formatDate(date: Date) {
@@ -17,6 +18,16 @@ function Card(props: {
 }) {
   const { id, title, summary, date, participants, isUserGroup, isActiveCard} = props;
   const navigate = useNavigate();
+
+
+  async function askToJoin(id: string) {
+    try {
+      await api.post(`/api/userGroups/${id}/requestJoin`);
+      
+    } catch(err) {
+      console.error(err);
+    }
+  }
 
   return (
     <Stack
@@ -82,7 +93,7 @@ function Card(props: {
               display="block"
               width="10rem"
               my={2}
-              onClick={() => {isUserGroup ? navigate(`/group/${id}`) : console.log('pls add me to your group')}}
+              onClick={() => {isUserGroup ? navigate(`/group/${id}`) : askToJoin(id)}}
             >
               {isUserGroup ? "Open group" : "Join group"}
             </Button>

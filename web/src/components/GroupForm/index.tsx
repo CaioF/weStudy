@@ -43,7 +43,7 @@ export function GroupForm({ action }: GroupFormProps) {
         timeZone: values.timezone,
         timeRanges: [
           {
-            day: "Saturday",
+            day: "Sunday",
             startTime: `${String(sessionTime.start).padStart(2, "0")}:00`,
             endTime: `${String(sessionTime.end).padStart(2, "0")}:00`,
           },

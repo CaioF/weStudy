@@ -62,7 +62,6 @@ export function Dashboard() {
   const [subject, setSubject] = useState("");
   const [timezone, setTimezone] = useState("");
   const [groupSize, setGroupSize] = useState(0);
-  const [userData, setUserData] = useState<any>({});
   const { openModal } = useModal();
   const slidesPerView = useBreakpointValue({ base: 1, md: 3 })
 
@@ -81,9 +80,6 @@ export function Dashboard() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   api.
-
   useEffect(() => {
     // TODO: loading symbol ontop of swiper carousel
     try {
@@ -91,9 +87,9 @@ export function Dashboard() {
         "day": "Sunday",
         "startTime": `${sessionTime.start}:00`,
         "endTime": `${sessionTime.end}:00`,
-        "subject": subject,
-        "groupSize": groupSize,
-        "timezone": timezone,
+        "subject": subject || "Maths",
+        "groupSize": groupSize || "3",
+        "timezone": timezone || "Singapore",
       }).then((res) => {
         const groups = res.data.map((group: GroupResponse) => {
           if(group.availibleSpots > 1) {
@@ -131,8 +127,8 @@ export function Dashboard() {
       <Flex justify={{base: 'center', md: "space-between"}} alignItems="center" mb="32px" flexDirection={{base: 'column', md: 'row'}}>
         <Stack order={{base: 2, md: 1}} direction="row" spacing="24px">
           <Flex flexDirection="column" alignItems="center">
-            <Text fontSize="32px" color="green.300" >3/5</Text>
-            <Text mt="-8px" color="gray.500">Your rate</Text>
+            <Text fontSize="32px" color="green.300">{`${localStorage.getItem("@weStudy:rating")}/5`}</Text>
+            <Text mt="-8px" color="gray.500">Your rating</Text>
           </Flex>
 
           <Flex flexDirection="column" alignItems="center">

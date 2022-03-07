@@ -48,14 +48,14 @@ io.on('connection', function(socket) {
     await socket.join(sessionID);
 
     // get chat messages
-    let tryGetChat = await chatService.getChatHistory(sessionID);
+    let tryGetChat = await chatService.getChatHistory(data, 1);
     if (!tryGetChat.success){
       console.log(`ERROR : ${tryGetChat.error}`);
       return;
     }
     else {
       tryGetChat.payload.forEach(async (chatMessage) => {
-        await chatService.processMessage(chatMessage, sessionID, io);
+        await chatService.sendMessage(chatMessage, sessionID, io);
       });
     }
   });

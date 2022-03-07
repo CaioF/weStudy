@@ -47,7 +47,7 @@ export function Chat() {
   const handleSendMessage = () => {
     
     if (!group || !group?.id) return;
-    socket.emit('message', {groupId: group.id, message: input, userId: id});
+    socket.emit('message', {groupId: group.id, chatId : group.chatId, message: input, userId: id});
     setInput('');
   }
 

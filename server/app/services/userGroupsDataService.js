@@ -153,6 +153,7 @@ var tryCreateNewGroup = async function(userId, group) {
 
     const groupToCreate = { 
         ownerId: userId, 
+        chatId : generateId(),
         name: group.name, 
         description : group.description,
         subject : group.subject,

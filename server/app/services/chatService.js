@@ -3,6 +3,15 @@ const userDs = require("../services/userDataService");
 const dataService = require("./dataService");
 const collectionName = "group.chat";
 
+async function sendMessage(msg, sessionID, io){
+    try{      
+        io.to(sessionID).emit('getMessage', msg);
+    }
+    catch(ex){
+        console.log(`ERROR : ${ex.message}`);
+    }
+}
+
 async function processMessage(msg, sessionID, io){
 
     let time = new Date();
@@ -32,11 +41,11 @@ async function processMessage(msg, sessionID, io){
         }
         
         // lookup group
-        // var tryGetGroup = await userGroupDs.tryGetGroup(msg.userId, msg.groupId);
-        // if (!tryGetGroup.success){
-        //     console.log(`ERROR : cannot get group : ${tryGetGroup.error}`);
-        //     return;
-        // }
+        var tryGetGroup = await userGroupDs.tryGetGroup(msg.userId, msg.groupId);
+        if (!tryGetGroup.success){
+            console.log(`ERROR : cannot get group : ${tryGetGroup.error}`);
+            return;
+        }
 
         let chatMessage = { 
             groupId : msg.groupId,
@@ -52,13 +61,11 @@ async function processMessage(msg, sessionID, io){
             console.log(`ERROR : ${trySave.error}`);
         }
       
-        // let chatId = `m:${tryGetGroup.payload.chatId}`;
         io.to(sessionID).emit('getMessage', chatMessage);
     }
     catch(ex){
         console.log(`ERROR : ${ex.message}`);
     }
-
 }
 
 async function trySaveChat(chatMessage) {     
@@ -72,7 +79,7 @@ async function trySaveChat(chatMessage) {
 }
 
 
-async function getChatHistory(groupId) {    
+async function getChatHistory(groupId, page) {    
     
     let project = {
         _id : 1,
@@ -83,8 +90,8 @@ async function getChatHistory(groupId) {
         message : 1,
     };
 
-    // let documents = await dataService.getManyPaginatedAsync(collectionName, {}, {},  page, 50, { time : -1 });    
-    let documents = await dataService.getManyAsync(collectionName, {}, project, { time : -1 });
+    let documents = await dataService.getManyPaginatedAsync(collectionName, { "groupId" : groupId }, project,  page, 50, { time : -1 });    
+    //let documents = await dataService.getManyAsync(collectionName, {  }, project, { time : -1 });
 
     if (!documents.success){
         return { success : false, error : `Could not read chat history : ${documents.error}` };
@@ -95,3 +102,4 @@ async function getChatHistory(groupId) {
 
 module.exports.processMessage = processMessage;
 module.exports.getChatHistory = getChatHistory;
+module.exports.sendMessage = sendMessage;

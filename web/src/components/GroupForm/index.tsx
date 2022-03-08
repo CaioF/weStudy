@@ -8,8 +8,8 @@ import { SelectForm, TimeSlider, Range } from "../Form";
 import { Button } from "../Button";
 import { timezones } from "../../util/timezones";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
+import { topics } from "../../util/topics";
 
-const topics = ["Maths", "Biology", "Technology"];
 const groupSizes = ["1", "2", "3", "4", "5"];
 
 interface GroupFormProps {

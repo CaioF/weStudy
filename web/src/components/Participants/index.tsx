@@ -43,12 +43,8 @@ function Participant({ name, rate, userId }: ParticipantProps) {
         <Text fontSize="12px">{rate}/5</Text>
       </Flex>
 
-      {!(userId === id) && (
+      {!(userId === id || userId === group?.ownerId) && (
         <Flex alignItems="center">
-          <Rating
-            currentRate={selectedRating}
-            onClick={(rating) => setSelectedRating(rating)}
-          />
 
           <Button
             marginLeft="16px"

@@ -16,14 +16,6 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/scrollbar";
 
-/**
- * TODO:
- * call api to get user info, display user rating and num of user groups
- * call api to 'post' search groups, display groups in swiper
- * add button to open create groupmodal form
- * add labels and divider
- */
-
 interface Group {
   id: string;
   name: string;
@@ -36,7 +28,6 @@ interface GroupResponse {
   id: string;
   name: string;
   description: string;
-  members: number;
   dateCreated: Date;
   availibleSpots: number;
   size: number;
@@ -72,7 +63,7 @@ export function Dashboard() {
           id: group.id,
           name: group.name,
           description: group.description,
-          members: group.size - (group.availibleSpots - 1),
+          members: (group.size-group.availibleSpots==0)?1:group.size-group.availibleSpots,
           dateCreated: group.dateCreated,
         };
       });
@@ -81,7 +72,6 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // TODO: loading symbol ontop of swiper carousel
     try {
       api.post("/api/userGroups/find", {
         "day": "Sunday",
@@ -92,21 +82,20 @@ export function Dashboard() {
         "timezone": timezone || "Singapore",
       }).then((res) => {
         const groups = res.data.map((group: GroupResponse) => {
-          if(group.availibleSpots > 1) {
+          if(group.availibleSpots >= 1) {
             return {
               id: group.id,
               name: group.name,
               description: group.description,
-              members: group.size - (group.availibleSpots - 1),
+              members: (group.size-group.availibleSpots==0)?1:group.size-group.availibleSpots,
               dateCreated: group.dateCreated,
             };
           }
         });
-        // TODO: remove loading symbol from top of swiper carousel
         setSearchGroups(groups);
         });
     } catch (error) {
-      // do nothing lmao
+      // pass
     }
   }, [sessionTime.start, sessionTime.end, subject, groupSize, timezone]);
 
@@ -156,7 +145,7 @@ export function Dashboard() {
           modules={[Navigation]}
           spaceBetween={30}
           slidesPerView={slidesPerView}
-          loop={userGroups.length > 3}
+          loop={false}
           centeredSlides={true}
           navigation
           style={{height: "15rem", paddingTop: "0.5rem"}}
@@ -247,7 +236,7 @@ export function Dashboard() {
           modules={[Navigation]}
           spaceBetween={30}
           slidesPerView={slidesPerView}
-          loop={userGroups.length > 3}
+          loop={false}
           centeredSlides={true}
           navigation
           style={{height: "15rem", paddingTop: "0.5rem"}}

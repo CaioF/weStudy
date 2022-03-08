@@ -37,6 +37,7 @@ export interface Task {
 interface Group {
   id: string;
   chatId: string;
+  ownerId: string;
   name: string;
   description: string;
   isOwner: boolean;
@@ -316,6 +317,7 @@ export { GroupPageContextProvider, useGroupPageContext };
 function mapGroupDataFromResponse(data: any): Group {
   const group: Group = {
     id: data?.id,
+    ownerId: data?.ownerId,
     chatId : data?.chatId,
     name: data?.name,
     description: data?.description,

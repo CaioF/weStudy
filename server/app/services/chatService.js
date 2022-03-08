@@ -90,7 +90,7 @@ async function getChatHistory(groupId, page) {
         message : 1,
     };
 
-    let documents = await dataService.getManyPaginatedAsync(collectionName, { "groupId" : groupId }, project,  page, 50, { time : -1 });    
+    let documents = await dataService.getManyPaginatedAsync(collectionName, { "groupId" : groupId }, project,  page, 50, { time : 1 });    
     //let documents = await dataService.getManyAsync(collectionName, {  }, project, { time : -1 });
 
     if (!documents.success){

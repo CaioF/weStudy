@@ -23,6 +23,7 @@ export function Chat() {
     clearInvitationLink,
   } = useGroupPageContext();
   const { id } = useAuth();
+  var joinOnceFlag: boolean = true;
 
   // Chat socket
   useEffect(() => {
@@ -31,7 +32,10 @@ export function Chat() {
     socket.on('getMessage', (message) => {
       setMessages(state => [...state, message]);
     });
-    socket.emit('joinChat', group.id);
+    if (joinOnceFlag) {
+      socket.emit('joinChat', group.id);
+      joinOnceFlag = true;
+    }
   }, [group?.id]);
 
   /**

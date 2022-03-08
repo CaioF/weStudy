@@ -346,14 +346,11 @@ var tryRequestJoin = async function(userId, groupId) {
 
     const filter = { 
         "_id" : dataService.toDbiD(groupId),
-        spots : { $gte : 1 },
-        ownerId : { $ne : userId },
-        members : { $not: { $elemMatch : { userId : userId }}}
     };
 
     let groupJoin = await dataService.updateOneAsync(collectionName, filter, update, { "_id" : dataService.toDbiD(groupId)  });
     if (!groupJoin.success){
-        console.error(`ERROR : ${updatedGroup.error}`);
+        console.error(`ERROR : ${groupJoin.error}`);
         return { success : false, error : `Unable to join group, please try again.` }; 
     }
 

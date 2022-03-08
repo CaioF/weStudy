@@ -14,82 +14,32 @@ import { useMemo, useState } from "react";
 import { useGroupPageContext } from "../../hooks/useGroupPageContext";
 import { Circle } from "../Circle";
 import { TaskItem } from "./TaskItem";
+import { api } from "../../services/api";
 
 export function Tasks() {
   const [input, setInput] = useState("");
-  const { group, createTask } = useGroupPageContext();
-
-  const numOfDoneTasks = useMemo(
-    () => group?.doneTasks.length,
-    [group?.doneTasks]
-  );
+  const { group, createTask, fetchGroup } = useGroupPageContext();
 
   const numOfPendingTasks = useMemo(
     () => group?.pendingTasks.length,
     [group?.pendingTasks]
   );
 
-  function handleDoneToggle(taskId: string) {
-    // update only task that was clicked
-    // const updatedTasks = tasks.map((task) => {
-    //   return task.id === taskId ? { ...task, isDone: !task.isDone } : task;
-    // });
-    // TODO: Make api call to update tasks of the group
-    // setTasks(updatedTasks);
-  }
-
-  function handleRemoveClick(taskId: string) {
-    // const updatedTasks = tasks.filter((task) => task.id !== taskId);
-    // // TODO: Make api call to remove task
-    // setTasks(updatedTasks);
-  }
-
-  function handleAssignToMeClick(taskId: string) {
-    // const assignedUser = { id: user.id, name: user.name };
-    // // add user to assigned users list of the task
-    // const updatedTasks = tasks.map((task) => {
-    //   return task.id === taskId
-    //     ? { ...task, assignedUsers: [...task.assignedUsers, assignedUser] }
-    //     : task;
-    // });
-    // // TODO: Make api call to update tasks of the group
-    // setTasks(updatedTasks);
-  }
-
-  function handleRemoveMeClick(taskId: string) {
-    // remove user to assigned users list of the task
-    // const updatedTasks = tasks.map((task) => {
-    //   if (task.id === taskId) {
-    //     return {
-    //       ...task,
-    //       assignedUsers: task.assignedUsers.filter((u) => u.id !== user.id),
-    //     };
-    //   }
-    //   return task;
-    // });
-    // // TODO: Make api call to update tasks of the group
-    // setTasks(updatedTasks);
+  async function handleDoneToggle(taskId: string) {
+    if (!group || !group?.id) return;
+    api.delete(`api/userGroups/${group?.id}/tasks/${taskId}`).then((res) => {
+      if (res.status !== 200) {
+        console.error(res);
+      }
+    });
+    await fetchGroup( group.id );
+    window.location.reload();
   }
 
   async function handleCreateTask() {
     if (!group || input.trim().length === 0) return;
     await createTask(group?.id, { name: "task", description: input.trim() });
     setInput("");
-  }
-
-  function handleEditDescription(taskId: string, description: string) {
-    // Update task description
-    // const updatedTasks = tasks.map((task) => {
-    //   if (task.id === taskId) {
-    //     return {
-    //       ...task,
-    //       description,
-    //     };
-    //   }
-    //   return task;
-    // });
-    // // TODO: Make api call to update tasks of the group
-    // setTasks(updatedTasks);
   }
 
   return (
@@ -140,11 +90,6 @@ export function Tasks() {
             <Text mr="8px">Pending</Text>
             <Circle num={numOfPendingTasks || 0} withBorder />
           </Tab>
-
-          <Tab>
-            <Text mr="8px">Done</Text>
-            <Circle num={numOfDoneTasks || 0} withBorder />
-          </Tab>
         </TabList>
         <TabPanels>
           <TabPanel>
@@ -156,28 +101,6 @@ export function Tasks() {
                   key={task.id}
                   task={task}
                   onDoneToggle={() => handleDoneToggle(task.id)}
-                  onRemoveClick={() => handleRemoveClick(task.id)}
-                  onAssignToMeClick={() => handleAssignToMeClick(task.id)}
-                  onRemoveMeClick={() => handleRemoveMeClick(task.id)}
-                  onEditDescription={handleEditDescription}
-                />
-              ))
-            )}
-          </TabPanel>
-
-          <TabPanel>
-            {group?.doneTasks.length === 0 ? (
-              <Text>You have not finished a task yet.</Text>
-            ) : (
-              group?.doneTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onDoneToggle={() => handleDoneToggle(task.id)}
-                  onRemoveClick={() => handleRemoveClick(task.id)}
-                  onAssignToMeClick={() => handleAssignToMeClick(task.id)}
-                  onRemoveMeClick={() => handleRemoveMeClick(task.id)}
-                  onEditDescription={handleEditDescription}
                 />
               ))
             )}

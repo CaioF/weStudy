@@ -11,16 +11,6 @@ weStudy is a solution which allows students to find and match with peers based o
 - Search for groups via filter
 
 
-## Contributions
-
-#### Frontend
-- [Uriel Alves](https://github.com/urieloalves)
-- [Caio Fleury](https://github.com/caioF)
-
-#### Backend
-- [Christian](https://github.com/Codendaal1120)
-- [Caio Fleury](https://github.com/caioF)
-
 ## License
 [GPLv3](LICENSE.md)
 

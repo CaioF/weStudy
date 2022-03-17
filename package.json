@@ -1,0 +1,31 @@
+{
+  "name": "we-study",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install:server": "npm ci --prefix server",
+    "install:web": "npm ci --prefix web",
+    "web:dev": "npm start --prefix web",
+    "server:dev": "npm run dev --prefix server",
+    "server:start": "npm run web:build && npm run start --prefix server",
+    "dev": "npm ci --prefix server && npm ci --prefix web && npm run build --prefix web",
+    "debug": "npm install --prefix server && npm install --prefix web && npm run build --prefix web && npm run start --prefix server",
+    "build": "npm ci --prefix server && npm ci --prefix web && npm run build --prefix web",
+    "start": "npm run start --prefix server",
+    "debug2" : "npm run start --prefix server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Codendaal1120/Uol-Agile-cm2020.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "GPLv3",
+  "bugs": {
+    "url": "https://github.com/Codendaal1120/Uol-Agile-cm2020/issues"
+  },
+  "homepage": "https://github.com/Codendaal1120/Uol-Agile-cm2020#readme",
+  "dependencies": {
+  }
+}
